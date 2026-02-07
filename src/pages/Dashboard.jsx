@@ -13,7 +13,7 @@ function Dashboard() {
     const recentItems = [
         { id: 101, type: 'Lost', item: 'Iphone 13', location: 'Library', status: 'Pending' },
         { id: 102, type: 'Found', item: 'Blue Tumbler', location: 'Canteen', status: 'In Storage' },
-        { id: 103, type: 'Lost', item: 'ID Lace', location: 'Gate 2', status: 'Returned' },
+        { id: 103, type: 'Lost', item: 'ID Lace', location: 'Gym', status: 'Returned' },
         { id: 104, type: 'Found', item: 'Calculus Book', location: 'Room 304', status: 'In Storage' },
     ];
 
