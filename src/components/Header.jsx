@@ -15,6 +15,7 @@ function Header() {
                 </div>
                 <nav className="header-nav">
                     <a href="#dashboard" className="nav-link">Dashboard</a>
+                    <a href="#dashboard" className="nav-link">Reports</a>
                 </nav>
             </div>
         </header>
