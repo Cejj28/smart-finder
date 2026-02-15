@@ -43,29 +43,31 @@ function Dashboard() {
             {/* Semantic HTML: Section for Recent Activity Table */}
             <section className="recent-activity">
                 <h2>Recent Reports</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Type</th>
-                            <th>Item Name</th>
-                            <th>Location</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {/* dynamic rendering of the array */}
-                        {recentItems.map((report) => (
-                            <tr key={report.id}>
-                                <td className={report.type === 'Lost' ? 'tag-lost' : 'tag-found'}>
-                                    {report.type}
-                                </td>
-                                <td>{report.item}</td>
-                                <td>{report.location}</td>
-                                <td>{report.status}</td>
+                <div className="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Item Name</th>
+                                <th>Location</th>
+                                <th>Status</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {/* dynamic rendering of the array */}
+                            {recentItems.map((report) => (
+                                <tr key={report.id}>
+                                    <td className={report.type === 'Lost' ? 'tag-lost' : 'tag-found'}>
+                                        {report.type}
+                                    </td>
+                                    <td>{report.item}</td>
+                                    <td>{report.location}</td>
+                                    <td>{report.status}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </section>
         </main>
     );
