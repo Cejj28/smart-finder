@@ -11,7 +11,7 @@
     top: 57px;
     left: 0;
     overflow-y: auto;
-    transition: width 0.3s ease;
+    transition: width 0.3s ease, transform 0.3s ease;
     z-index: 900;
 }
 
@@ -82,10 +82,23 @@
     flex-shrink: 0;
 }
 
+/* Sidebar Overlay — mobile backdrop */
+.sidebar-overlay {
+    display: none;
+}
+
 /* Tablet and below */
 @media (max-width: 1024px) {
     .sidebar {
         width: 220px;
+    }
+
+    .app-body {
+        padding-left: 220px;
+    }
+
+    .app-body:has(.sidebar.collapsed) {
+        padding-left: 56px;
     }
 
     .sidebar.collapsed {
@@ -93,8 +106,54 @@
     }
 }
 
+/* Mobile — slide-in drawer */
 @media (max-width: 768px) {
     .sidebar {
+        width: 260px;
+        transform: translateX(-100%);
+    }
+
+    .sidebar.collapsed {
+        width: 260px;
+        transform: translateX(-100%);
+    }
+
+    .sidebar.mobile-open {
+        transform: translateX(0);
+    }
+
+    .app-body {
+        padding-left: 0;
+    }
+
+    .app-body:has(.sidebar.collapsed) {
+        padding-left: 0;
+    }
+
+    /* Show the overlay when sidebar is open */
+    .sidebar-overlay {
+        display: block;
+        position: fixed;
+        top: 57px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 899;
+        animation: overlayFadeIn 0.3s ease;
+    }
+
+    .sidebar-overlay.hidden {
         display: none;
+    }
+}
+
+@keyframes overlayFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
     }
 }

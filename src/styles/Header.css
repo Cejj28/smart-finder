@@ -230,4 +230,39 @@
     .header-container {
         padding: 0 1rem;
     }
+
+    .app-tagline {
+        display: none;
+    }
+
+    .header-logo {
+        width: 36px;
+        height: 36px;
+    }
+
+    .app-title {
+        font-size: 1.25rem;
+    }
+
+    .notif-dropdown {
+        right: -60px;
+        min-width: 250px;
+    }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+    .title-group {
+        display: none;
+    }
+
+    .header-logo {
+        width: 32px;
+        height: 32px;
+    }
+
+    .notif-dropdown {
+        right: -100px;
+        min-width: 220px;
+    }
 }

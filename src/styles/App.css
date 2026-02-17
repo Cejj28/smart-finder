@@ -201,7 +201,7 @@ body {
   padding: 0.75rem 1.25rem;
   border-radius: 10px;
   border: 1px solid #cbd5e0;
-  width: 500px;
+  width: min(100%, 500px);
   font-size: 1rem;
   outline: none;
 }
@@ -354,6 +354,16 @@ tbody tr:hover {
 
   .recent-activity {
     padding: 1.5rem 1rem;
+  }
+
+  .search-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .search-input {
+    width: 100%;
   }
 
   table {
