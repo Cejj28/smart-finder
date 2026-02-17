@@ -27,24 +27,24 @@ body {
   flex-direction: column;
 }
 
-/* Trust Blue Design System */
+/* Calm Teal Design System */
 :root {
-  --primary-color: #1e40af;
-  --primary-dark: #1e3a8a;
-  --secondary-color: #0d9488;
-  --accent-color: #06b6d4;
+  --primary-color: #0EA5A4;
+  --primary-dark: #0F766E;
+  --secondary-color: #0EA5A4;
+  --accent-color: #0EA5A4;
 
-  --bg-color: #f8fafc;
-  --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  --card-bg: #ffffff;
+  --bg-color: #F5F9FC;
+  --bg-gradient: #F5F9FC;
+  --card-bg: #FFFFFF;
 
-  --text-dark: #1e293b;
-  --text-medium: #475569;
-  --text-light: #64748b;
+  --text-dark: #1E293B;
+  --text-medium: #64748B;
+  --text-light: #94A3B8;
 
-  --success-color: #16a34a;
-  --warning-color: #d97706;
-  --error-color: #dc2626;
+  --success-color: #10B981;
+  --warning-color: #F59E0B;
+  --error-color: #EF4444;
 
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
@@ -87,10 +87,7 @@ body {
   margin-bottom: 0.75rem;
   font-size: clamp(2rem, 5vw, 3rem);
   font-weight: 800;
-  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #0EA5A4;
   letter-spacing: -0.5px;
 }
 
@@ -116,7 +113,7 @@ body {
   box-shadow: var(--shadow-md);
   text-align: center;
   transition: all var(--transition-normal);
-  border: 1px solid rgba(30, 64, 175, 0.1);
+  border: 1px solid rgba(14, 165, 164, 0.12);
   position: relative;
   overflow: hidden;
 }
@@ -128,7 +125,7 @@ body {
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+  background: var(--primary-color);
   transform: scaleX(0);
   transition: transform var(--transition-normal);
 }
@@ -155,17 +152,11 @@ body {
   font-size: clamp(2rem, 5vw, 3rem);
   font-weight: 800;
   margin: 0.5rem 0 0;
-  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--primary-color);
 }
 
 .stat-card.pending .stat-number {
-  background: linear-gradient(135deg, var(--warning-color), var(--error-color));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--warning-color);
 }
 
 /* Modern Table Styling - Responsive */
@@ -199,7 +190,7 @@ table {
 }
 
 thead {
-  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  background: var(--primary-color);
 }
 
 th {
@@ -225,7 +216,7 @@ tbody tr {
 }
 
 tbody tr:hover {
-  background-color: #f7fafc;
+  background-color: var(--bg-color);
   transform: scale(1.01);
 }
 
@@ -242,7 +233,7 @@ tbody tr:hover {
   color: var(--success-color);
   font-weight: 700;
   padding: 0.25rem 0.75rem;
-  background-color: rgba(22, 163, 74, 0.1);
+  background-color: rgba(16, 185, 129, 0.1);
   border-radius: var(--radius-sm);
   display: inline-block;
 }
