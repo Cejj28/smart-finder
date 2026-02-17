@@ -1,28 +1,17 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import StatCard from '../components/StatCard';
 import StatusBadge from '../components/StatusBadge';
+import { dashboardStats, recentItems } from '../data/mockData';
 import '../styles/App.css';
 
 function Dashboard() {
-    const [searchTerm, VXSearchTerm] = useState('');
-
-    const stats = {
-        totalLost: 42,
-        totalFound: 18,
-        pendingClaims: 5
-    };
-
-    const recentItems = [
-        { id: 101, type: 'Lost', item: 'Iphone 13', location: 'Library', status: 'Pending' },
-        { id: 102, type: 'Found', item: 'Blue Tumbler', location: 'Canteen', status: 'In Storage' },
-        { id: 103, type: 'Lost', item: 'ID Lace', location: 'Gym', status: 'Returned' },
-        { id: 104, type: 'Found', item: 'Calculus Book', location: 'Room 304', status: 'In Storage' },
-    ];
+    const [searchTerm, setSearchTerm] = useState('');
 
     // Filter logic
     const filteredItems = recentItems.filter(item =>
         item.item.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.location.toLowerCase().includes(searchTerm.toLowerCase())
+        item.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.submittedBy.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     return (
@@ -33,27 +22,21 @@ function Dashboard() {
             </header>
 
             <section className="stats-grid">
-                <StatCard title="Total Lost Items" count={stats.totalLost} />
-                <StatCard title="Total Found Items" count={stats.totalFound} />
-                <StatCard title="Pending Claims" count={stats.pendingClaims} variant="warning" />
+                <StatCard title="Pending Review" count={dashboardStats.pendingReview} variant="warning" />
+                <StatCard title="Approved Today" count={dashboardStats.approvedToday} />
+                <StatCard title="Total Reports" count={dashboardStats.totalReports} />
+                <StatCard title="Rejected" count={dashboardStats.rejected} variant="danger" />
             </section>
 
             <section className="recent-activity">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                    <h2>Recent Reports</h2>
+                <div className="search-header">
+                    <h2>Pending Post Verifications</h2>
                     <input
                         type="text"
-                        placeholder="Search items or location..."
+                        className="search-input"
+                        placeholder="Search item, location, or student..."
                         value={searchTerm}
-                        onChange={(e) => VXSearchTerm(e.target.value)}
-                        style={{
-                            padding: '0.75rem 1.25rem',
-                            borderRadius: '10px',
-                            border: '1px solid #cbd5e0',
-                            width: '500px',
-                            fontSize: '1rem',
-                            outline: 'none',
-                        }}
+                        onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
 
@@ -63,8 +46,11 @@ function Dashboard() {
                             <tr>
                                 <th>Type</th>
                                 <th>Item Name</th>
+                                <th>Submitted By</th>
                                 <th>Location</th>
+                                <th>Date</th>
                                 <th>Status</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -72,18 +58,29 @@ function Dashboard() {
                                 <tr key={report.id}>
                                     <td><StatusBadge status={report.type} /></td>
                                     <td>{report.item}</td>
+                                    <td>{report.submittedBy}</td>
                                     <td>{report.location}</td>
+                                    <td className="date-cell">{report.date}</td>
                                     <td><StatusBadge status={report.status} /></td>
+                                    <td>
+                                        {report.status === 'Pending Review' ? (
+                                            <>
+                                                <button className="btn-approve">Approve</button>
+                                                <button className="btn-reject">Reject</button>
+                                            </>
+                                        ) : (
+                                            <span className="action-done">—</span>
+                                        )}
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
                     {filteredItems.length === 0 && (
-                        <p style={{ textAlign: 'center', padding: '2rem', color: '#64748B' }}>No items found.</p>
+                        <p className="empty-state">No items found.</p>
                     )}
                 </div>
             </section>
-
         </main>
     );
 }

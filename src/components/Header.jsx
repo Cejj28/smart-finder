@@ -1,11 +1,25 @@
-import React from 'react';
+import { useState, useRef } from 'react';
 import '../styles/Header.css';
 import logo from '../assets/logo.png';
+import useClickOutside from '../hooks/useClickOutside';
+import { notifications } from '../data/mockData';
 
-function Header() {
+function Header({ onToggleSidebar }) {
+    const [profileOpen, setProfileOpen] = useState(false);
+    const [notifOpen, setNotifOpen] = useState(false);
+    const profileRef = useRef(null);
+    const notifRef = useRef(null);
+
+    // Close dropdowns when clicking outside
+    useClickOutside(profileRef, () => setProfileOpen(false));
+    useClickOutside(notifRef, () => setNotifOpen(false));
+
     return (
         <header className="app-header">
             <div className="header-container">
+                <button className="sidebar-toggle-btn" onClick={onToggleSidebar}>
+                    ☰
+                </button>
                 <div className="logo-section">
                     <img src={logo} alt="SmartFinder Logo" className="header-logo" />
                     <div className="title-group">
@@ -13,10 +27,52 @@ function Header() {
                         <p className="app-tagline">Lost &amp; Found Management System</p>
                     </div>
                 </div>
-                <nav className="header-nav">
-                    <a href="#dashboard" className="nav-link">Dashboard</a>
-                    <a href="#dashboard" className="nav-link">Reports</a>
-                </nav>
+
+                <div className="header-actions">
+                    <div className="notif-wrapper" ref={notifRef}>
+                        <button
+                            className="header-icon-btn"
+                            title="Notifications"
+                            onClick={() => { setNotifOpen(!notifOpen); setProfileOpen(false); }}
+                        >
+                            🔔
+                            <span className="notif-badge">{notifications.length}</span>
+                        </button>
+
+                        {notifOpen && (
+                            <div className="notif-dropdown">
+                                <div className="dropdown-header">Notifications</div>
+                                {notifications.map((n) => (
+                                    <div key={n.id} className="notif-item">
+                                        <p className="notif-message">{n.message}</p>
+                                        <span className="notif-time">{n.time}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="profile-wrapper" ref={profileRef}>
+                        <button
+                            className="header-icon-btn profile-btn"
+                            onClick={() => { setProfileOpen(!profileOpen); setNotifOpen(false); }}
+                            title="Profile"
+                        >
+                            👤
+                        </button>
+
+                        {profileOpen && (
+                            <div className="profile-dropdown">
+                                <a href="#profile" className="dropdown-item">
+                                    📋 Profile
+                                </a>
+                                <a href="#logout" className="dropdown-item dropdown-logout">
+                                    🚪 Log Out
+                                </a>
+                            </div>
+                        )}
+                    </div>
+                </div>
             </div>
         </header>
     );

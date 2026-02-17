@@ -1,13 +1,13 @@
-import React from 'react';
-
 function StatusBadge({ status }) {
     const getStatusStyle = (status) => {
         switch (status.toLowerCase()) {
-            case 'lost': return 'tag-lost';
-            case 'found': return 'tag-found';
-            case 'returned': return 'tag-found';
-            case 'pending': return 'tag-lost';
-            default: return '';
+            case 'lost': return 'tag tag-lost';
+            case 'found': return 'tag tag-found';
+            case 'pending review': return 'tag tag-pending';
+            case 'approved': return 'tag tag-approved';
+            case 'rejected': return 'tag tag-rejected';
+            case 'claimed': return 'tag tag-claimed';
+            default: return 'tag';
         }
     };
 

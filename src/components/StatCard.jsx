@@ -1,9 +1,9 @@
-import React from 'react';
 import '../styles/App.css';
 
 function StatCard({ title, count, variant }) {
 
-    const cardClass = `card stat-card ${variant === 'warning' ? 'pending' : ''}`;
+    const variantClass = variant === 'warning' ? 'pending' : variant === 'danger' ? 'danger' : '';
+    const cardClass = `stat-card ${variantClass}`;
 
     return (
         <div className={cardClass}>
