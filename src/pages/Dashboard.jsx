@@ -1,21 +1,29 @@
-import React from 'react';
-import '../styles/App.css'; // We will use the main CSS file for simplicity
+import React, { useState } from 'react';
+import StatCard from '../components/StatCard';
+import StatusBadge from '../components/StatusBadge';
+import '../styles/App.css';
 
 function Dashboard() {
-    // 1. DYNAMIC DATA: Variables for Stats (Simulating DB counts)
+    const [searchTerm, VXSearchTerm] = useState('');
+
     const stats = {
         totalLost: 42,
         totalFound: 18,
         pendingClaims: 5
     };
 
-    // 2. DYNAMIC DATA: Array of Objects (Simulating a list of recent items)
     const recentItems = [
         { id: 101, type: 'Lost', item: 'Iphone 13', location: 'Library', status: 'Pending' },
         { id: 102, type: 'Found', item: 'Blue Tumbler', location: 'Canteen', status: 'In Storage' },
         { id: 103, type: 'Lost', item: 'ID Lace', location: 'Gym', status: 'Returned' },
         { id: 104, type: 'Found', item: 'Calculus Book', location: 'Room 304', status: 'In Storage' },
     ];
+
+    // Filter logic
+    const filteredItems = recentItems.filter(item =>
+        item.item.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.location.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     return (
         <main className="dashboard-container">
@@ -24,25 +32,31 @@ function Dashboard() {
                 <p>Welcome back, Admin.</p>
             </header>
 
-            {/* Semantic HTML: Section for Key Metrics */}
             <section className="stats-grid">
-                <div className="card stat-card">
-                    <h3>Total Lost Items</h3>
-                    <p className="stat-number">{stats.totalLost}</p>
-                </div>
-                <div className="card stat-card">
-                    <h3>Total Found Items</h3>
-                    <p className="stat-number">{stats.totalFound}</p>
-                </div>
-                <div className="card stat-card pending">
-                    <h3>Pending Claims</h3>
-                    <p className="stat-number">{stats.pendingClaims}</p>
-                </div>
+                <StatCard title="Total Lost Items" count={stats.totalLost} />
+                <StatCard title="Total Found Items" count={stats.totalFound} />
+                <StatCard title="Pending Claims" count={stats.pendingClaims} variant="warning" />
             </section>
 
-            {/* Semantic HTML: Section for Recent Activity Table */}
             <section className="recent-activity">
-                <h2>Recent Reports</h2>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                    <h2>Recent Reports</h2>
+                    <input
+                        type="text"
+                        placeholder="Search items or location..."
+                        value={searchTerm}
+                        onChange={(e) => VXSearchTerm(e.target.value)}
+                        style={{
+                            padding: '0.75rem 1.25rem',
+                            borderRadius: '10px',
+                            border: '1px solid #cbd5e0',
+                            width: '500px',
+                            fontSize: '1rem',
+                            outline: 'none',
+                        }}
+                    />
+                </div>
+
                 <div className="table-wrapper">
                     <table>
                         <thead>
@@ -54,21 +68,22 @@ function Dashboard() {
                             </tr>
                         </thead>
                         <tbody>
-                            {/* dynamic rendering of the array */}
-                            {recentItems.map((report) => (
+                            {filteredItems.map((report) => (
                                 <tr key={report.id}>
-                                    <td className={report.type === 'Lost' ? 'tag-lost' : 'tag-found'}>
-                                        {report.type}
-                                    </td>
+                                    <td><StatusBadge status={report.type} /></td>
                                     <td>{report.item}</td>
                                     <td>{report.location}</td>
-                                    <td>{report.status}</td>
+                                    <td><StatusBadge status={report.status} /></td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
+                    {filteredItems.length === 0 && (
+                        <p style={{ textAlign: 'center', padding: '2rem', color: '#64748B' }}>No items found.</p>
+                    )}
                 </div>
             </section>
+
         </main>
     );
 }
