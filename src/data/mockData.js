@@ -57,7 +57,7 @@ export const usersData = [
 // Admin profile
 export const adminProfile = {
     name: 'Admin User',
-    email: 'admin@smartfinder.edu',
+    email: 'admin@ustp.edu',
     phone: '09170000000',
     bio: 'System administrator for SmartFinder Lost & Found Management System.',
     role: 'Super Admin',

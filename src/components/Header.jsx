@@ -3,11 +3,13 @@ import { Link } from 'react-router-dom';
 import '../styles/Header.css';
 import logo from '../assets/logo.png';
 import useClickOutside from '../hooks/useClickOutside';
+import ConfirmModal from './ConfirmModal';
 import { notifications } from '../data/mockData';
 
-function Header({ onToggleSidebar }) {
+function Header({ onToggleSidebar, onLogout }) {
     const [profileOpen, setProfileOpen] = useState(false);
     const [notifOpen, setNotifOpen] = useState(false);
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
     const profileRef = useRef(null);
     const notifRef = useRef(null);
 
@@ -66,14 +68,24 @@ function Header({ onToggleSidebar }) {
                                 <Link to="/profile" className="dropdown-item" onClick={() => setProfileOpen(false)}>
                                     📋 Profile
                                 </Link>
-                                <Link to="/" className="dropdown-item dropdown-logout" onClick={() => setProfileOpen(false)}>
+                                <span className="dropdown-item dropdown-logout" onClick={() => { setProfileOpen(false); setShowLogoutConfirm(true); }}>
                                     🚪 Log Out
-                                </Link>
+                                </span>
                             </div>
                         )}
                     </div>
                 </div>
             </div>
+
+            <ConfirmModal
+                isOpen={showLogoutConfirm}
+                title="Log Out"
+                message="Are you sure you want to log out?"
+                confirmLabel="Log Out"
+                variant="danger"
+                onConfirm={() => { setShowLogoutConfirm(false); onLogout(); }}
+                onCancel={() => setShowLogoutConfirm(false)}
+            />
         </header>
     );
 }

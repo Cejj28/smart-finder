@@ -5,6 +5,7 @@ import Header from './components/Header'
 import Sidebar from './components/Sidebar'
 import Footer from './components/Footer'
 import ScrollToTop from './components/ScrollToTop'
+import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import PostVerification from './pages/PostVerification'
 import ClaimValidation from './pages/ClaimValidation'
@@ -15,6 +16,9 @@ import Profile from './pages/Profile'
 const MOBILE_BREAKPOINT = 768;
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return localStorage.getItem('sf_auth') === 'true';
+  });
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= MOBILE_BREAKPOINT);
@@ -41,10 +45,25 @@ function App() {
     setMobileOpen(false);
   }, []);
 
+  const handleLogin = useCallback((user) => {
+    localStorage.setItem('sf_auth', 'true');
+    setIsAuthenticated(true);
+  }, []);
+
+  const handleLogout = useCallback(() => {
+    localStorage.removeItem('sf_auth');
+    setIsAuthenticated(false);
+  }, []);
+
+  // Show login page if not authenticated
+  if (!isAuthenticated) {
+    return <Login onLogin={handleLogin} />;
+  }
+
   return (
     <div className="app-layout">
       <ScrollToTop />
-      <Header onToggleSidebar={handleToggleSidebar} />
+      <Header onToggleSidebar={handleToggleSidebar} onLogout={handleLogout} />
       <div className="app-body">
         <Sidebar
           isCollapsed={sidebarCollapsed}
