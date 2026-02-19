@@ -1,9 +1,16 @@
 import { useState, useEffect, useCallback } from 'react'
+import { Routes, Route } from 'react-router-dom'
 import './styles/App.css'
 import Header from './components/Header'
 import Sidebar from './components/Sidebar'
 import Footer from './components/Footer'
+import ScrollToTop from './components/ScrollToTop'
 import Dashboard from './pages/Dashboard'
+import PostVerification from './pages/PostVerification'
+import ClaimValidation from './pages/ClaimValidation'
+import UserManagement from './pages/UserManagement'
+import Reports from './pages/Reports'
+import Profile from './pages/Profile'
 
 const MOBILE_BREAKPOINT = 768;
 
@@ -12,12 +19,10 @@ function App() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= MOBILE_BREAKPOINT);
 
-  // Track viewport width to know if we're on mobile
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth <= MOBILE_BREAKPOINT;
       setIsMobile(mobile);
-      // Auto-close mobile drawer when resizing to desktop
       if (!mobile) setMobileOpen(false);
     };
     window.addEventListener('resize', handleResize);
@@ -38,6 +43,7 @@ function App() {
 
   return (
     <div className="app-layout">
+      <ScrollToTop />
       <Header onToggleSidebar={handleToggleSidebar} />
       <div className="app-body">
         <Sidebar
@@ -49,7 +55,14 @@ function App() {
           <div className="sidebar-overlay" onClick={handleCloseMobile} />
         )}
         <div className="app-content">
-          <Dashboard />
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/verification" element={<PostVerification />} />
+            <Route path="/claims" element={<ClaimValidation />} />
+            <Route path="/users" element={<UserManagement />} />
+            <Route path="/reports" element={<Reports />} />
+            <Route path="/profile" element={<Profile />} />
+          </Routes>
         </div>
       </div>
       <Footer />

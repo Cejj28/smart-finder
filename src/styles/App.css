@@ -292,6 +292,16 @@ tbody tr:hover {
   background-color: rgba(99, 102, 241, 0.1);
 }
 
+.tag-released {
+  color: #0EA5A4;
+  background-color: rgba(14, 165, 164, 0.1);
+}
+
+.tag-verified {
+  color: var(--success-color);
+  background-color: rgba(16, 185, 129, 0.1);
+}
+
 .date-cell {
   white-space: nowrap;
   color: var(--text-light);

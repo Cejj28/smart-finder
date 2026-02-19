@@ -1,0 +1,414 @@
+/* =============================================
+   Pages.css — Shared styles for admin pages
+   Matches existing teal design system
+   ============================================= */
+
+/* Page Container */
+.page-container {
+    flex: 1;
+    width: 100%;
+    padding: clamp(1.5rem, 4vw, 3rem);
+    animation: fadeInUp 0.5s ease-out;
+}
+
+.page-header {
+    margin-bottom: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+.page-header h1 {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-weight: 800;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.5px;
+}
+
+.page-header p {
+    color: var(--text-medium);
+    font-size: clamp(0.95rem, 2vw, 1.1rem);
+}
+
+/* Form Card */
+.form-card {
+    background: var(--card-bg);
+    border-radius: var(--radius-lg);
+    padding: clamp(1.5rem, 3vw, 2.5rem);
+    box-shadow: var(--shadow-md);
+    margin-bottom: 2rem;
+    border: 1px solid rgba(14, 165, 164, 0.08);
+}
+
+.form-card h2 {
+    font-size: clamp(1.25rem, 2.5vw, 1.5rem);
+    color: var(--text-dark);
+    font-weight: 700;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid rgba(14, 165, 164, 0.12);
+}
+
+/* Page Form */
+.page-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+    gap: 1rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.form-group label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-medium);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    padding: 0.7rem 1rem;
+    border: 1px solid #cbd5e0;
+    border-radius: var(--radius-sm);
+    font-size: 0.95rem;
+    font-family: inherit;
+    color: var(--text-dark);
+    background: #fff;
+    transition: all var(--transition-fast);
+    outline: none;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(14, 165, 164, 0.1);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* Form Feedback */
+.form-feedback {
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-sm);
+    margin-bottom: 1rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    animation: fadeInDown 0.3s ease-out;
+}
+
+.form-feedback.success {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success-color);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.form-feedback.error {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--error-color);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+/* Form Actions */
+.form-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+/* Buttons */
+.btn-primary {
+    padding: 0.7rem 1.5rem;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(14, 165, 164, 0.3);
+}
+
+.btn-secondary {
+    padding: 0.7rem 1.5rem;
+    background: transparent;
+    color: var(--text-medium);
+    border: 1px solid #cbd5e0;
+    border-radius: var(--radius-sm);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.btn-secondary:hover {
+    background: var(--bg-color);
+    border-color: var(--text-medium);
+}
+
+.btn-edit {
+    padding: 0.35rem 0.7rem;
+    background: rgba(14, 165, 164, 0.1);
+    color: var(--primary-color);
+    border: none;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-right: 0.4rem;
+    transition: all var(--transition-fast);
+}
+
+.btn-edit:hover {
+    background: rgba(14, 165, 164, 0.2);
+}
+
+.btn-delete {
+    padding: 0.35rem 0.7rem;
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--error-color);
+    border: none;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.btn-delete:hover {
+    background: rgba(239, 68, 68, 0.2);
+}
+
+.btn-release {
+    padding: 0.4rem 0.8rem;
+    background: #6366F1;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.btn-release:hover {
+    background: #4F46E5;
+}
+
+/* Table Card */
+.table-card {
+    background: var(--card-bg);
+    border-radius: var(--radius-lg);
+    padding: clamp(1.5rem, 3vw, 2.5rem);
+    box-shadow: var(--shadow-md);
+    margin-bottom: 2rem;
+    border: 1px solid rgba(14, 165, 164, 0.08);
+}
+
+.table-card h2 {
+    font-size: clamp(1.25rem, 2.5vw, 1.5rem);
+    color: var(--text-dark);
+    font-weight: 700;
+}
+
+/* Mini Stats Row */
+.mini-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.mini-stat {
+    background: var(--card-bg);
+    padding: 1.25rem;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    text-align: center;
+    border: 1px solid rgba(14, 165, 164, 0.1);
+    transition: all var(--transition-fast);
+}
+
+.mini-stat:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+}
+
+.mini-stat-count {
+    display: block;
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--primary-color);
+}
+
+.mini-stat-label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-medium);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 0.25rem;
+    font-weight: 600;
+}
+
+/* Role Badge */
+.role-badge {
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    background: rgba(14, 165, 164, 0.1);
+    color: var(--primary-color);
+}
+
+/* Status Indicator (clickable) */
+.status-indicator {
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: inline-block;
+}
+
+.status-indicator.active {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success-color);
+}
+
+.status-indicator.inactive {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--error-color);
+}
+
+.status-indicator:hover {
+    opacity: 0.8;
+    transform: scale(1.05);
+}
+
+/* Profile Card */
+.profile-card {
+    max-width: 700px;
+}
+
+.profile-view {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.profile-avatar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.avatar-icon {
+    font-size: 3rem;
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(14, 165, 164, 0.1);
+    border-radius: 50%;
+}
+
+.profile-role-badge {
+    padding: 0.3rem 0.8rem;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.profile-details {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.profile-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.field-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.field-value {
+    font-size: 1rem;
+    color: var(--text-dark);
+    font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .page-container {
+        padding: 1.5rem 1rem;
+    }
+
+    .form-card,
+    .table-card {
+        padding: 1.25rem 1rem;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .mini-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .profile-card {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .mini-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+        width: 100%;
+        text-align: center;
+    }
+}

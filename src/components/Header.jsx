@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import '../styles/Header.css';
 import logo from '../assets/logo.png';
 import useClickOutside from '../hooks/useClickOutside';
@@ -10,7 +11,6 @@ function Header({ onToggleSidebar }) {
     const profileRef = useRef(null);
     const notifRef = useRef(null);
 
-    // Close dropdowns when clicking outside
     useClickOutside(profileRef, () => setProfileOpen(false));
     useClickOutside(notifRef, () => setNotifOpen(false));
 
@@ -63,12 +63,12 @@ function Header({ onToggleSidebar }) {
 
                         {profileOpen && (
                             <div className="profile-dropdown">
-                                <a href="#profile" className="dropdown-item">
+                                <Link to="/profile" className="dropdown-item" onClick={() => setProfileOpen(false)}>
                                     📋 Profile
-                                </a>
-                                <a href="#logout" className="dropdown-item dropdown-logout">
+                                </Link>
+                                <Link to="/" className="dropdown-item dropdown-logout" onClick={() => setProfileOpen(false)}>
                                     🚪 Log Out
-                                </a>
+                                </Link>
                             </div>
                         )}
                     </div>

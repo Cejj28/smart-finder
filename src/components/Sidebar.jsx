@@ -1,3 +1,4 @@
+import { NavLink } from 'react-router-dom';
 import '../styles/Sidebar.css';
 
 function Sidebar({ isCollapsed, isMobileOpen, onCloseMobile }) {
@@ -7,6 +8,9 @@ function Sidebar({ isCollapsed, isMobileOpen, onCloseMobile }) {
         isMobileOpen ? 'mobile-open' : '',
     ].filter(Boolean).join(' ');
 
+    const linkClass = ({ isActive }) =>
+        `sidebar-link${isActive ? ' active' : ''}`;
+
     return (
         <aside className={classes}>
             {(!isCollapsed || isMobileOpen) && (
@@ -15,26 +19,26 @@ function Sidebar({ isCollapsed, isMobileOpen, onCloseMobile }) {
                         <h2>Admin Panel</h2>
                     </div>
                     <nav className="sidebar-nav">
-                        <a href="#dashboard" className="sidebar-link active" onClick={onCloseMobile}>
+                        <NavLink to="/" className={linkClass} onClick={onCloseMobile} end>
                             <span className="sidebar-icon">📊</span>
                             Dashboard Overview
-                        </a>
-                        <a href="#verification" className="sidebar-link" onClick={onCloseMobile}>
+                        </NavLink>
+                        <NavLink to="/verification" className={linkClass} onClick={onCloseMobile}>
                             <span className="sidebar-icon">✅</span>
                             Post Verification
-                        </a>
-                        <a href="#claims" className="sidebar-link" onClick={onCloseMobile}>
+                        </NavLink>
+                        <NavLink to="/claims" className={linkClass} onClick={onCloseMobile}>
                             <span className="sidebar-icon">📋</span>
                             Claim Validation
-                        </a>
-                        <a href="#users" className="sidebar-link" onClick={onCloseMobile}>
+                        </NavLink>
+                        <NavLink to="/users" className={linkClass} onClick={onCloseMobile}>
                             <span className="sidebar-icon">👥</span>
                             User Management
-                        </a>
-                        <a href="#reports" className="sidebar-link" onClick={onCloseMobile}>
+                        </NavLink>
+                        <NavLink to="/reports" className={linkClass} onClick={onCloseMobile}>
                             <span className="sidebar-icon">📈</span>
                             Generate Reports
-                        </a>
+                        </NavLink>
                     </nav>
                 </>
             )}

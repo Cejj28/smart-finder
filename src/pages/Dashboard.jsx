@@ -1,14 +1,38 @@
 import { useState } from 'react';
 import StatCard from '../components/StatCard';
 import StatusBadge from '../components/StatusBadge';
-import { dashboardStats, recentItems } from '../data/mockData';
+import ConfirmModal from '../components/ConfirmModal';
+import { recentItems as initialItems } from '../data/mockData';
 import '../styles/App.css';
 
 function Dashboard() {
+    const [items, setItems] = useState(initialItems);
     const [searchTerm, setSearchTerm] = useState('');
+    const [confirm, setConfirm] = useState({ open: false, id: null, action: '' });
 
-    // Filter logic
-    const filteredItems = recentItems.filter(item =>
+    // Compute stats from current state
+    const stats = {
+        pendingReview: items.filter(i => i.status === 'Pending Review').length,
+        approvedToday: items.filter(i => i.status === 'Approved').length,
+        totalReports: items.length,
+        rejected: items.filter(i => i.status === 'Rejected').length,
+    };
+
+    const handleConfirm = () => {
+        const { id, action } = confirm;
+        if (action === 'approve') {
+            setItems(prev => prev.map(item =>
+                item.id === id ? { ...item, status: 'Approved' } : item
+            ));
+        } else if (action === 'reject') {
+            setItems(prev => prev.map(item =>
+                item.id === id ? { ...item, status: 'Rejected' } : item
+            ));
+        }
+        setConfirm({ open: false, id: null, action: '' });
+    };
+
+    const filteredItems = items.filter(item =>
         item.item.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.submittedBy.toLowerCase().includes(searchTerm.toLowerCase())
@@ -22,10 +46,10 @@ function Dashboard() {
             </header>
 
             <section className="stats-grid">
-                <StatCard title="Pending Review" count={dashboardStats.pendingReview} variant="warning" />
-                <StatCard title="Approved Today" count={dashboardStats.approvedToday} />
-                <StatCard title="Total Reports" count={dashboardStats.totalReports} />
-                <StatCard title="Rejected" count={dashboardStats.rejected} variant="danger" />
+                <StatCard title="Pending Review" count={stats.pendingReview} variant="warning" />
+                <StatCard title="Approved Today" count={stats.approvedToday} />
+                <StatCard title="Total Reports" count={stats.totalReports} />
+                <StatCard title="Rejected" count={stats.rejected} variant="danger" />
             </section>
 
             <section className="recent-activity">
@@ -65,8 +89,8 @@ function Dashboard() {
                                     <td>
                                         {report.status === 'Pending Review' ? (
                                             <>
-                                                <button className="btn-approve">Approve</button>
-                                                <button className="btn-reject">Reject</button>
+                                                <button className="btn-approve" onClick={() => setConfirm({ open: true, id: report.id, action: 'approve' })}>Approve</button>
+                                                <button className="btn-reject" onClick={() => setConfirm({ open: true, id: report.id, action: 'reject' })}>Reject</button>
                                             </>
                                         ) : (
                                             <span className="action-done">—</span>
@@ -81,6 +105,18 @@ function Dashboard() {
                     )}
                 </div>
             </section>
+
+            <ConfirmModal
+                isOpen={confirm.open}
+                title={confirm.action === 'approve' ? 'Approve Post' : 'Reject Post'}
+                message={confirm.action === 'approve'
+                    ? 'Are you sure you want to approve this post? It will be visible to all users.'
+                    : 'Are you sure you want to reject this post? This action cannot be undone.'}
+                confirmLabel={confirm.action === 'approve' ? 'Approve' : 'Reject'}
+                variant={confirm.action === 'approve' ? 'primary' : 'danger'}
+                onConfirm={handleConfirm}
+                onCancel={() => setConfirm({ open: false, id: null, action: '' })}
+            />
         </main>
     );
 }
