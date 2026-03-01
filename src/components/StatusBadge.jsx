@@ -1,5 +1,7 @@
 import { memo } from 'react';
 
+//Rauto
+
 const STATUS_CLASS_MAP = {
     'lost': 'tag tag-lost',
     'found': 'tag tag-found',
