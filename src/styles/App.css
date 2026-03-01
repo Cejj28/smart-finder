@@ -297,11 +297,6 @@ tbody tr:hover {
   background-color: rgba(14, 165, 164, 0.1);
 }
 
-.tag-verified {
-  color: var(--success-color);
-  background-color: rgba(16, 185, 129, 0.1);
-}
-
 .date-cell {
   white-space: nowrap;
   color: var(--text-light);
@@ -416,8 +411,10 @@ tbody tr:hover {
   border: none;
   border-radius: 6px;
   font-size: 0.85rem;
+  font-weight: 600;
   cursor: pointer;
   color: white;
+  transition: all var(--transition-fast);
 }
 
 .btn-approve {

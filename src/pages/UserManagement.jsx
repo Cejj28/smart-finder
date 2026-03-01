@@ -1,91 +1,82 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import ConfirmModal from '../components/ConfirmModal';
+import useConfirmModal from '../hooks/useConfirmModal';
+import useSearch from '../hooks/useSearch';
+import useFormHandler from '../hooks/useFormHandler';
 import { usersData as initialUsers } from '../data/mockData';
 import '../styles/Pages.css';
 
-const emptyForm = { name: '', email: '', role: 'Student', status: 'Active' };
+const EMPTY_FORM = { name: '', email: '', role: 'Student', status: 'Active' };
+const SEARCH_FIELDS = ['name', 'email', 'role'];
 
 function UserManagement() {
     const [users, setUsers] = useState(initialUsers);
-    const [form, setForm] = useState(emptyForm);
     const [editingId, setEditingId] = useState(null);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [feedback, setFeedback] = useState('');
-    const [confirm, setConfirm] = useState({ open: false, id: null, action: '' });
+    const { form, setForm, feedback, handleChange, resetForm, showFeedback, setFeedback } = useFormHandler(EMPTY_FORM);
+    const { searchTerm, setSearchTerm, filtered } = useSearch(users, SEARCH_FIELDS);
 
-    const handleChange = (e) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
-    };
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        if (!form.name || !form.email) {
-            setFeedback('Name and email are required.');
-            return;
-        }
-
-        if (editingId) {
-            setUsers(prev => prev.map(u => u.id === editingId ? { ...u, ...form } : u));
-            setEditingId(null);
-            setFeedback('User updated successfully!');
-        } else {
-            const newUser = { id: Date.now(), ...form };
-            setUsers([newUser, ...users]);
-            setFeedback('User added successfully!');
-        }
-        setForm(emptyForm);
-        setTimeout(() => setFeedback(''), 3000);
-    };
-
-    const handleEdit = (user) => {
-        setEditingId(user.id);
-        setForm({ name: user.name, email: user.email, role: user.role, status: user.status });
-        setFeedback('');
-    };
-
-    const handleConfirm = () => {
-        const { id, action } = confirm;
-        if (action === 'delete') {
-            setUsers(prev => prev.filter(u => u.id !== id));
-            if (editingId === id) {
-                setEditingId(null);
-                setForm(emptyForm);
-            }
-        } else if (action === 'toggle') {
-            setUsers(prev => prev.map(u =>
-                u.id === id ? { ...u, status: u.status === 'Active' ? 'Inactive' : 'Active' } : u
-            ));
-        }
-        setConfirm({ open: false, id: null, action: '' });
-    };
-
-    const handleCancel = () => {
-        setEditingId(null);
-        setForm(emptyForm);
-        setFeedback('');
-    };
-
-    const getConfirmProps = () => {
-        switch (confirm.action) {
+    // Dynamic confirm props because toggle action depends on current user status
+    const getConfirmAction = useCallback((action, id) => {
+        switch (action) {
             case 'delete':
                 return { title: 'Delete User', message: 'Are you sure you want to delete this user? This action cannot be undone.', confirmLabel: 'Delete', variant: 'danger' };
             case 'toggle': {
-                const user = users.find(u => u.id === confirm.id);
+                const user = users.find(u => u.id === id);
                 const newStatus = user?.status === 'Active' ? 'Inactive' : 'Active';
                 return { title: 'Change User Status', message: `Are you sure you want to set this user to ${newStatus}?`, confirmLabel: `Set ${newStatus}`, variant: 'warning' };
             }
             default:
                 return {};
         }
-    };
+    }, [users]);
 
-    const filtered = users.filter(u =>
-        u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        u.role.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const { confirm, openConfirm, closeConfirm, confirmProps } = useConfirmModal(getConfirmAction);
 
-    const confirmProps = getConfirmProps();
+    const handleSubmit = useCallback((e) => {
+        e.preventDefault();
+        if (!form.name || !form.email) {
+            showFeedback('Name and email are required.', 0);
+            return;
+        }
+
+        if (editingId) {
+            setUsers(prev => prev.map(u => u.id === editingId ? { ...u, ...form } : u));
+            setEditingId(null);
+            showFeedback('User updated successfully!');
+        } else {
+            const newUser = { id: Date.now(), ...form };
+            setUsers(prev => [newUser, ...prev]);
+            showFeedback('User added successfully!');
+        }
+        resetForm();
+    }, [form, editingId, resetForm, showFeedback]);
+
+    const handleEdit = useCallback((user) => {
+        setEditingId(user.id);
+        setForm({ name: user.name, email: user.email, role: user.role, status: user.status });
+        setFeedback('');
+    }, [setForm, setFeedback]);
+
+    const handleConfirm = useCallback(() => {
+        const { id, action } = confirm;
+        if (action === 'delete') {
+            setUsers(prev => prev.filter(u => u.id !== id));
+            if (editingId === id) {
+                setEditingId(null);
+                resetForm();
+            }
+        } else if (action === 'toggle') {
+            setUsers(prev => prev.map(u =>
+                u.id === id ? { ...u, status: u.status === 'Active' ? 'Inactive' : 'Active' } : u
+            ));
+        }
+        closeConfirm();
+    }, [confirm, editingId, closeConfirm, resetForm]);
+
+    const handleCancel = useCallback(() => {
+        setEditingId(null);
+        resetForm();
+    }, [resetForm]);
 
     return (
         <main className="page-container">
@@ -169,14 +160,14 @@ function UserManagement() {
                                     <td><span className="role-badge">{u.role}</span></td>
                                     <td>
                                         <span className={`status-indicator ${u.status === 'Active' ? 'active' : 'inactive'}`}
-                                            onClick={() => setConfirm({ open: true, id: u.id, action: 'toggle' })}
+                                            onClick={() => openConfirm(u.id, 'toggle')}
                                             title="Click to toggle status">
                                             {u.status}
                                         </span>
                                     </td>
                                     <td>
                                         <button className="btn-edit" onClick={() => handleEdit(u)}>Edit</button>
-                                        <button className="btn-delete" onClick={() => setConfirm({ open: true, id: u.id, action: 'delete' })}>Delete</button>
+                                        <button className="btn-delete" onClick={() => openConfirm(u.id, 'delete')}>Delete</button>
                                     </td>
                                 </tr>
                             ))}
@@ -193,7 +184,7 @@ function UserManagement() {
                 confirmLabel={confirmProps.confirmLabel}
                 variant={confirmProps.variant}
                 onConfirm={handleConfirm}
-                onCancel={() => setConfirm({ open: false, id: null, action: '' })}
+                onCancel={closeConfirm}
             />
         </main>
     );

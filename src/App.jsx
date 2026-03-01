@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import './styles/App.css'
 import Header from './components/Header'
@@ -6,12 +6,14 @@ import Sidebar from './components/Sidebar'
 import Footer from './components/Footer'
 import ScrollToTop from './components/ScrollToTop'
 import Login from './pages/Login'
-import Dashboard from './pages/Dashboard'
-import PostVerification from './pages/PostVerification'
-import ClaimValidation from './pages/ClaimValidation'
-import UserManagement from './pages/UserManagement'
-import Reports from './pages/Reports'
-import Profile from './pages/Profile'
+
+// Lazy-loaded route pages — each page loads only when navigated to
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const PostVerification = lazy(() => import('./pages/PostVerification'));
+const ClaimValidation = lazy(() => import('./pages/ClaimValidation'));
+const UserManagement = lazy(() => import('./pages/UserManagement'));
+const Reports = lazy(() => import('./pages/Reports'));
+const Profile = lazy(() => import('./pages/Profile'));
 
 const MOBILE_BREAKPOINT = 768;
 
@@ -74,14 +76,16 @@ function App() {
           <div className="sidebar-overlay" onClick={handleCloseMobile} />
         )}
         <div className="app-content">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/verification" element={<PostVerification />} />
-            <Route path="/claims" element={<ClaimValidation />} />
-            <Route path="/users" element={<UserManagement />} />
-            <Route path="/reports" element={<Reports />} />
-            <Route path="/profile" element={<Profile />} />
-          </Routes>
+          <Suspense fallback={<div className="page-container" style={{ textAlign: 'center', padding: '3rem' }}>Loading…</div>}>
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/verification" element={<PostVerification />} />
+              <Route path="/claims" element={<ClaimValidation />} />
+              <Route path="/users" element={<UserManagement />} />
+              <Route path="/reports" element={<Reports />} />
+              <Route path="/profile" element={<Profile />} />
+            </Routes>
+          </Suspense>
         </div>
       </div>
       <Footer />

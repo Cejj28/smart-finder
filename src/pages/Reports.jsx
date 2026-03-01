@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import StatusBadge from '../components/StatusBadge';
 import { allReports as initialReports } from '../data/mockData';
 import '../styles/Pages.css';
@@ -13,44 +13,48 @@ function Reports() {
     });
     const [generated, setGenerated] = useState(false);
 
-    const handleFilterChange = (e) => {
-        setFilters({ ...filters, [e.target.name]: e.target.value });
+    const handleFilterChange = useCallback((e) => {
+        const { name, value } = e.target;
+        setFilters(prev => ({ ...prev, [name]: value }));
         setGenerated(false);
-    };
+    }, []);
 
-    const handleGenerate = (e) => {
+    const handleGenerate = useCallback((e) => {
         e.preventDefault();
         setGenerated(true);
-    };
+    }, []);
 
-    const handleReset = () => {
+    const handleReset = useCallback(() => {
         setFilters({ type: 'All', status: 'All', dateFrom: '', dateTo: '' });
         setGenerated(false);
-    };
+    }, []);
 
-    const filteredReports = reports.filter(r => {
-        if (filters.type !== 'All' && r.type !== filters.type) return false;
-        if (filters.status !== 'All' && r.status !== filters.status) return false;
-        if (filters.dateFrom && r.date < filters.dateFrom) return false;
-        if (filters.dateTo && r.date > filters.dateTo) return false;
-        return true;
-    });
+    // Memoize filtered reports so they only recompute when reports or filters change
+    const filteredReports = useMemo(() =>
+        reports.filter(r => {
+            if (filters.type !== 'All' && r.type !== filters.type) return false;
+            if (filters.status !== 'All' && r.status !== filters.status) return false;
+            if (filters.dateFrom && r.date < filters.dateFrom) return false;
+            if (filters.dateTo && r.date > filters.dateTo) return false;
+            return true;
+        }),
+        [reports, filters]);
 
-    // Summary stats from filtered data
-    const summary = {
+    // Memoize summary stats so they only recompute when filteredReports changes
+    const summary = useMemo(() => ({
         total: filteredReports.length,
         lost: filteredReports.filter(r => r.type === 'Lost').length,
         found: filteredReports.filter(r => r.type === 'Found').length,
         pending: filteredReports.filter(r => r.status === 'Pending Review').length,
         approved: filteredReports.filter(r => r.status === 'Approved').length,
         claimed: filteredReports.filter(r => r.status === 'Claimed').length,
-    };
+    }), [filteredReports]);
 
     return (
         <main className="page-container">
             <div className="page-header">
                 <h1>Generate Reports</h1>
-                <p>Filter and generate admin reports for lost & found activity.</p>
+                <p>Filter and generate admin reports for lost &amp; found activity.</p>
             </div>
 
             {/* Filter Form */}

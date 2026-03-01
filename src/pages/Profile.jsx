@@ -1,40 +1,35 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import useFormHandler from '../hooks/useFormHandler';
 import { adminProfile as initialProfile } from '../data/mockData';
 import '../styles/Pages.css';
 
 function Profile() {
     const [profile, setProfile] = useState(initialProfile);
-    const [form, setForm] = useState(initialProfile);
     const [isEditing, setIsEditing] = useState(false);
-    const [feedback, setFeedback] = useState('');
+    const { form, setForm, feedback, handleChange, showFeedback, setFeedback } = useFormHandler(initialProfile);
 
-    const handleChange = (e) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
-    };
-
-    const handleEdit = () => {
+    const handleEdit = useCallback(() => {
         setForm(profile);
         setIsEditing(true);
         setFeedback('');
-    };
+    }, [profile, setForm, setFeedback]);
 
-    const handleCancel = () => {
+    const handleCancel = useCallback(() => {
         setForm(profile);
         setIsEditing(false);
         setFeedback('');
-    };
+    }, [profile, setForm, setFeedback]);
 
-    const handleSave = (e) => {
+    const handleSave = useCallback((e) => {
         e.preventDefault();
         if (!form.name || !form.email) {
-            setFeedback('Name and email are required.');
+            showFeedback('Name and email are required.', 0);
             return;
         }
         setProfile(form);
         setIsEditing(false);
-        setFeedback('Profile updated successfully!');
-        setTimeout(() => setFeedback(''), 3000);
-    };
+        showFeedback('Profile updated successfully!');
+    }, [form, showFeedback]);
 
     return (
         <main className="page-container">

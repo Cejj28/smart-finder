@@ -1,24 +1,43 @@
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import StatCard from '../components/StatCard';
 import StatusBadge from '../components/StatusBadge';
 import ConfirmModal from '../components/ConfirmModal';
+import useConfirmModal from '../hooks/useConfirmModal';
+import useSearch from '../hooks/useSearch';
 import { recentItems as initialItems } from '../data/mockData';
 import '../styles/App.css';
 
+const SEARCH_FIELDS = ['item', 'location', 'submittedBy'];
+
+const CONFIRM_ACTIONS = {
+    approve: {
+        title: 'Approve Post',
+        message: 'Are you sure you want to approve this post? It will be visible to all users.',
+        confirmLabel: 'Approve',
+        variant: 'primary',
+    },
+    reject: {
+        title: 'Reject Post',
+        message: 'Are you sure you want to reject this post? This action cannot be undone.',
+        confirmLabel: 'Reject',
+        variant: 'danger',
+    },
+};
+
 function Dashboard() {
     const [items, setItems] = useState(initialItems);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [confirm, setConfirm] = useState({ open: false, id: null, action: '' });
+    const { confirm, openConfirm, closeConfirm, confirmProps } = useConfirmModal(CONFIRM_ACTIONS);
+    const { searchTerm, setSearchTerm, filtered: filteredItems } = useSearch(items, SEARCH_FIELDS);
 
-    // Compute stats from current state
-    const stats = {
+    // Memoize stats so they only recompute when items change
+    const stats = useMemo(() => ({
         pendingReview: items.filter(i => i.status === 'Pending Review').length,
         approvedToday: items.filter(i => i.status === 'Approved').length,
         totalReports: items.length,
         rejected: items.filter(i => i.status === 'Rejected').length,
-    };
+    }), [items]);
 
-    const handleConfirm = () => {
+    const handleConfirm = useCallback(() => {
         const { id, action } = confirm;
         if (action === 'approve') {
             setItems(prev => prev.map(item =>
@@ -29,14 +48,8 @@ function Dashboard() {
                 item.id === id ? { ...item, status: 'Rejected' } : item
             ));
         }
-        setConfirm({ open: false, id: null, action: '' });
-    };
-
-    const filteredItems = items.filter(item =>
-        item.item.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.submittedBy.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+        closeConfirm();
+    }, [confirm, closeConfirm]);
 
     return (
         <main className="dashboard-container">
@@ -89,8 +102,8 @@ function Dashboard() {
                                     <td>
                                         {report.status === 'Pending Review' ? (
                                             <>
-                                                <button className="btn-approve" onClick={() => setConfirm({ open: true, id: report.id, action: 'approve' })}>Approve</button>
-                                                <button className="btn-reject" onClick={() => setConfirm({ open: true, id: report.id, action: 'reject' })}>Reject</button>
+                                                <button className="btn-approve" onClick={() => openConfirm(report.id, 'approve')}>Approve</button>
+                                                <button className="btn-reject" onClick={() => openConfirm(report.id, 'reject')}>Reject</button>
                                             </>
                                         ) : (
                                             <span className="action-done">—</span>
@@ -108,14 +121,12 @@ function Dashboard() {
 
             <ConfirmModal
                 isOpen={confirm.open}
-                title={confirm.action === 'approve' ? 'Approve Post' : 'Reject Post'}
-                message={confirm.action === 'approve'
-                    ? 'Are you sure you want to approve this post? It will be visible to all users.'
-                    : 'Are you sure you want to reject this post? This action cannot be undone.'}
-                confirmLabel={confirm.action === 'approve' ? 'Approve' : 'Reject'}
-                variant={confirm.action === 'approve' ? 'primary' : 'danger'}
+                title={confirmProps.title}
+                message={confirmProps.message}
+                confirmLabel={confirmProps.confirmLabel}
+                variant={confirmProps.variant}
                 onConfirm={handleConfirm}
-                onCancel={() => setConfirm({ open: false, id: null, action: '' })}
+                onCancel={closeConfirm}
             />
         </main>
     );

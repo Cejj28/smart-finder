@@ -1,26 +1,54 @@
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import StatusBadge from '../components/StatusBadge';
 import ConfirmModal from '../components/ConfirmModal';
+import useConfirmModal from '../hooks/useConfirmModal';
+import useSearch from '../hooks/useSearch';
+import useFormHandler from '../hooks/useFormHandler';
 import { claimsData as initialClaims } from '../data/mockData';
 import '../styles/Pages.css';
 
-const emptyForm = { claimant: '', item: '', proof: '', contact: '', date: '' };
+const EMPTY_FORM = { claimant: '', item: '', proof: '', contact: '', date: '' };
+const SEARCH_FIELDS = ['claimant', 'item'];
+
+const CONFIRM_ACTIONS = {
+    approve: {
+        title: 'Approve Claim',
+        message: 'Are you sure you want to approve this claim? The item will be marked for release.',
+        confirmLabel: 'Approve',
+        variant: 'primary',
+    },
+    reject: {
+        title: 'Reject Claim',
+        message: 'Are you sure you want to reject this claim? This action cannot be undone.',
+        confirmLabel: 'Reject',
+        variant: 'danger',
+    },
+    release: {
+        title: 'Release Item',
+        message: 'Are you sure the item has been released to the claimant?',
+        confirmLabel: 'Release',
+        variant: 'warning',
+    },
+};
 
 function ClaimValidation() {
     const [claims, setClaims] = useState(initialClaims);
-    const [form, setForm] = useState(emptyForm);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [feedback, setFeedback] = useState('');
-    const [confirm, setConfirm] = useState({ open: false, id: null, action: '' });
+    const { form, feedback, handleChange, resetForm, showFeedback } = useFormHandler(EMPTY_FORM);
+    const { confirm, openConfirm, closeConfirm, confirmProps } = useConfirmModal(CONFIRM_ACTIONS);
+    const { searchTerm, setSearchTerm, filtered } = useSearch(claims, SEARCH_FIELDS);
 
-    const handleChange = (e) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
-    };
+    // Memoize mini-stat counts so they only recompute when claims change
+    const miniStats = useMemo(() => ({
+        pending: claims.filter(c => c.status === 'Pending').length,
+        approved: claims.filter(c => c.status === 'Approved').length,
+        released: claims.filter(c => c.status === 'Released').length,
+        rejected: claims.filter(c => c.status === 'Rejected').length,
+    }), [claims]);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = useCallback((e) => {
         e.preventDefault();
         if (!form.claimant || !form.item || !form.proof || !form.contact || !form.date) {
-            setFeedback('Please fill in all required fields.');
+            showFeedback('Please fill in all required fields.', 0);
             return;
         }
         const newClaim = {
@@ -29,13 +57,12 @@ function ClaimValidation() {
             status: 'Pending',
             releaseDate: '',
         };
-        setClaims([newClaim, ...claims]);
-        setForm(emptyForm);
-        setFeedback('Claim logged successfully!');
-        setTimeout(() => setFeedback(''), 3000);
-    };
+        setClaims(prev => [newClaim, ...prev]);
+        resetForm();
+        showFeedback('Claim logged successfully!');
+    }, [form, resetForm, showFeedback]);
 
-    const handleConfirm = () => {
+    const handleConfirm = useCallback(() => {
         const { id, action } = confirm;
         if (action === 'approve') {
             setClaims(prev => prev.map(c =>
@@ -50,52 +77,32 @@ function ClaimValidation() {
                 c.id === id ? { ...c, status: 'Released' } : c
             ));
         }
-        setConfirm({ open: false, id: null, action: '' });
-    };
-
-    const getConfirmProps = () => {
-        switch (confirm.action) {
-            case 'approve':
-                return { title: 'Approve Claim', message: 'Are you sure you want to approve this claim? The item will be marked for release.', confirmLabel: 'Approve', variant: 'primary' };
-            case 'reject':
-                return { title: 'Reject Claim', message: 'Are you sure you want to reject this claim? This action cannot be undone.', confirmLabel: 'Reject', variant: 'danger' };
-            case 'release':
-                return { title: 'Release Item', message: 'Are you sure the item has been released to the claimant?', confirmLabel: 'Release', variant: 'warning' };
-            default:
-                return {};
-        }
-    };
-
-    const filtered = claims.filter(c =>
-        c.claimant.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.item.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    const confirmProps = getConfirmProps();
+        closeConfirm();
+    }, [confirm, closeConfirm]);
 
     return (
         <main className="page-container">
             <div className="page-header">
-                <h1>Claim Validation & Release Tracking</h1>
+                <h1>Claim Validation &amp; Release Tracking</h1>
                 <p>Validate item claims, approve ownership, and track item release.</p>
             </div>
 
             {/* Summary Stats */}
             <div className="mini-stats">
                 <div className="mini-stat">
-                    <span className="mini-stat-count">{claims.filter(c => c.status === 'Pending').length}</span>
+                    <span className="mini-stat-count">{miniStats.pending}</span>
                     <span className="mini-stat-label">Pending</span>
                 </div>
                 <div className="mini-stat">
-                    <span className="mini-stat-count">{claims.filter(c => c.status === 'Approved').length}</span>
+                    <span className="mini-stat-count">{miniStats.approved}</span>
                     <span className="mini-stat-label">Approved</span>
                 </div>
                 <div className="mini-stat">
-                    <span className="mini-stat-count">{claims.filter(c => c.status === 'Released').length}</span>
+                    <span className="mini-stat-count">{miniStats.released}</span>
                     <span className="mini-stat-label">Released</span>
                 </div>
                 <div className="mini-stat">
-                    <span className="mini-stat-count">{claims.filter(c => c.status === 'Rejected').length}</span>
+                    <span className="mini-stat-count">{miniStats.rejected}</span>
                     <span className="mini-stat-label">Rejected</span>
                 </div>
             </div>
@@ -174,12 +181,12 @@ function ClaimValidation() {
                                     <td>
                                         {c.status === 'Pending' && (
                                             <>
-                                                <button className="btn-approve" onClick={() => setConfirm({ open: true, id: c.id, action: 'approve' })}>Approve</button>
-                                                <button className="btn-reject" onClick={() => setConfirm({ open: true, id: c.id, action: 'reject' })}>Reject</button>
+                                                <button className="btn-approve" onClick={() => openConfirm(c.id, 'approve')}>Approve</button>
+                                                <button className="btn-reject" onClick={() => openConfirm(c.id, 'reject')}>Reject</button>
                                             </>
                                         )}
                                         {c.status === 'Approved' && (
-                                            <button className="btn-release" onClick={() => setConfirm({ open: true, id: c.id, action: 'release' })}>Release</button>
+                                            <button className="btn-release" onClick={() => openConfirm(c.id, 'release')}>Release</button>
                                         )}
                                         {(c.status === 'Released' || c.status === 'Rejected') && (
                                             <span className="action-done">—</span>
@@ -200,7 +207,7 @@ function ClaimValidation() {
                 confirmLabel={confirmProps.confirmLabel}
                 variant={confirmProps.variant}
                 onConfirm={handleConfirm}
-                onCancel={() => setConfirm({ open: false, id: null, action: '' })}
+                onCancel={closeConfirm}
             />
         </main>
     );

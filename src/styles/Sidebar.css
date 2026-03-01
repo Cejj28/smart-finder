@@ -143,9 +143,6 @@
         animation: overlayFadeIn 0.3s ease;
     }
 
-    .sidebar-overlay.hidden {
-        display: none;
-    }
 }
 
 @keyframes overlayFadeIn {

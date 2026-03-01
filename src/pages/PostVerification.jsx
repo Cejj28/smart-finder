@@ -1,26 +1,40 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import StatusBadge from '../components/StatusBadge';
 import ConfirmModal from '../components/ConfirmModal';
+import useConfirmModal from '../hooks/useConfirmModal';
+import useSearch from '../hooks/useSearch';
+import useFormHandler from '../hooks/useFormHandler';
 import { pendingPosts as initialPosts } from '../data/mockData';
 import '../styles/Pages.css';
 
-const emptyForm = { type: 'Lost', item: '', location: '', reporter: '', date: '', description: '' };
+const EMPTY_FORM = { type: 'Lost', item: '', location: '', reporter: '', date: '', description: '' };
+const SEARCH_FIELDS = ['item', 'reporter', 'location'];
+
+const CONFIRM_ACTIONS = {
+    verify: {
+        title: 'Verify Post',
+        message: 'Are you sure you want to verify this post? It will be marked as verified.',
+        confirmLabel: 'Verify',
+        variant: 'primary',
+    },
+    reject: {
+        title: 'Reject Post',
+        message: 'Are you sure you want to reject this post? This action cannot be undone.',
+        confirmLabel: 'Reject',
+        variant: 'danger',
+    },
+};
 
 function PostVerification() {
     const [posts, setPosts] = useState(initialPosts);
-    const [form, setForm] = useState(emptyForm);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [feedback, setFeedback] = useState('');
-    const [confirm, setConfirm] = useState({ open: false, id: null, action: '' });
+    const { form, feedback, handleChange, resetForm, showFeedback } = useFormHandler(EMPTY_FORM);
+    const { confirm, openConfirm, closeConfirm, confirmProps } = useConfirmModal(CONFIRM_ACTIONS);
+    const { searchTerm, setSearchTerm, filtered } = useSearch(posts, SEARCH_FIELDS);
 
-    const handleChange = (e) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
-    };
-
-    const handleSubmit = (e) => {
+    const handleSubmit = useCallback((e) => {
         e.preventDefault();
         if (!form.item || !form.location || !form.reporter || !form.date) {
-            setFeedback('Please fill in all required fields.');
+            showFeedback('Please fill in all required fields.', 0);
             return;
         }
         const newPost = {
@@ -28,33 +42,26 @@ function PostVerification() {
             ...form,
             status: 'Pending',
         };
-        setPosts([newPost, ...posts]);
-        setForm(emptyForm);
-        setFeedback('Post added successfully!');
-        setTimeout(() => setFeedback(''), 3000);
-    };
+        setPosts(prev => [newPost, ...prev]);
+        resetForm();
+        showFeedback('Post added successfully!');
+    }, [form, resetForm, showFeedback]);
 
-    const handleConfirm = () => {
+    const handleConfirm = useCallback(() => {
         const { id, action } = confirm;
         if (action === 'verify') {
             setPosts(prev => prev.map(p => p.id === id ? { ...p, status: 'Verified' } : p));
         } else if (action === 'reject') {
             setPosts(prev => prev.map(p => p.id === id ? { ...p, status: 'Rejected' } : p));
         }
-        setConfirm({ open: false, id: null, action: '' });
-    };
-
-    const filtered = posts.filter(p =>
-        p.item.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.reporter.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.location.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+        closeConfirm();
+    }, [confirm, closeConfirm]);
 
     return (
         <main className="page-container">
             <div className="page-header">
-                <h1>Post Review & Verification</h1>
-                <p>Review user-submitted lost & found posts and verify their accuracy.</p>
+                <h1>Post Review &amp; Verification</h1>
+                <p>Review user-submitted lost &amp; found posts and verify their accuracy.</p>
             </div>
 
             {/* Add Post Form */}
@@ -138,8 +145,8 @@ function PostVerification() {
                                     <td>
                                         {p.status === 'Pending' ? (
                                             <>
-                                                <button className="btn-approve" onClick={() => setConfirm({ open: true, id: p.id, action: 'verify' })}>Verify</button>
-                                                <button className="btn-reject" onClick={() => setConfirm({ open: true, id: p.id, action: 'reject' })}>Reject</button>
+                                                <button className="btn-approve" onClick={() => openConfirm(p.id, 'verify')}>Verify</button>
+                                                <button className="btn-reject" onClick={() => openConfirm(p.id, 'reject')}>Reject</button>
                                             </>
                                         ) : (
                                             <span className="action-done">—</span>
@@ -155,14 +162,12 @@ function PostVerification() {
 
             <ConfirmModal
                 isOpen={confirm.open}
-                title={confirm.action === 'verify' ? 'Verify Post' : 'Reject Post'}
-                message={confirm.action === 'verify'
-                    ? 'Are you sure you want to verify this post? It will be marked as verified.'
-                    : 'Are you sure you want to reject this post? This action cannot be undone.'}
-                confirmLabel={confirm.action === 'verify' ? 'Verify' : 'Reject'}
-                variant={confirm.action === 'verify' ? 'primary' : 'danger'}
+                title={confirmProps.title}
+                message={confirmProps.message}
+                confirmLabel={confirmProps.confirmLabel}
+                variant={confirmProps.variant}
                 onConfirm={handleConfirm}
-                onCancel={() => setConfirm({ open: false, id: null, action: '' })}
+                onCancel={closeConfirm}
             />
         </main>
     );

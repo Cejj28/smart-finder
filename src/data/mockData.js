@@ -2,14 +2,6 @@
 // Mock Data — replace with API calls later
 // ============================================
 
-// Admin dashboard statistics (initial values)
-export const dashboardStats = {
-    pendingReview: 12,
-    approvedToday: 8,
-    totalReports: 60,
-    rejected: 3,
-};
-
 // Recent item reports
 export const recentItems = [
     { id: 101, type: 'Lost', item: 'Iphone 13', location: 'Library', submittedBy: 'Juan Dela Cruz', date: '2026-02-17', status: 'Pending Review' },

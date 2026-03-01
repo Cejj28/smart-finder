@@ -1,6 +1,7 @@
+import { memo } from 'react';
 import '../styles/ConfirmModal.css';
 
-function ConfirmModal({ isOpen, title, message, confirmLabel, variant, onConfirm, onCancel }) {
+const ConfirmModal = memo(function ConfirmModal({ isOpen, title, message, confirmLabel, variant, onConfirm, onCancel }) {
     if (!isOpen) return null;
 
     const variantClass = variant === 'danger' ? 'confirm-btn-danger'
@@ -23,6 +24,6 @@ function ConfirmModal({ isOpen, title, message, confirmLabel, variant, onConfirm
             </div>
         </div>
     );
-}
+});
 
 export default ConfirmModal;
