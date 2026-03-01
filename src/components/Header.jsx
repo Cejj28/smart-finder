@@ -6,6 +6,8 @@ import useClickOutside from '../hooks/useClickOutside';
 import ConfirmModal from './ConfirmModal';
 import { notifications } from '../data/mockData';
 
+//Rauto
+
 function Header({ onToggleSidebar, onLogout }) {
     const [profileOpen, setProfileOpen] = useState(false);
     const [notifOpen, setNotifOpen] = useState(false);
