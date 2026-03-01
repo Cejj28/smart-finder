@@ -1,6 +1,8 @@
 import { NavLink } from 'react-router-dom';
 import '../styles/Sidebar.css';
 
+//Rauto
+
 function Sidebar({ isCollapsed, isMobileOpen, onCloseMobile }) {
     const classes = [
         'sidebar',
