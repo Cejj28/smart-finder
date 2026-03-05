@@ -1,43 +1,32 @@
-import { useState, useMemo, useCallback } from 'react';
+// TEST CHANGE BY VLADYY - March 2026 - PIT WORK START
+import { useState } from 'react';
 import StatCard from '../components/StatCard';
 import StatusBadge from '../components/StatusBadge';
 import ConfirmModal from '../components/ConfirmModal';
-import useConfirmModal from '../hooks/useConfirmModal';
-import useSearch from '../hooks/useSearch';
 import { recentItems as initialItems } from '../data/mockData';
-import '../styles/App.css';
 
-const SEARCH_FIELDS = ['item', 'location', 'submittedBy'];
-
-const CONFIRM_ACTIONS = {
-    approve: {
-        title: 'Approve Post',
-        message: 'Are you sure you want to approve this post? It will be visible to all users.',
-        confirmLabel: 'Approve',
-        variant: 'primary',
-    },
-    reject: {
-        title: 'Reject Post',
-        message: 'Are you sure you want to reject this post? This action cannot be undone.',
-        confirmLabel: 'Reject',
-        variant: 'danger',
-    },
-};
-
-function Dashboard() {
+function Dashboard({ isDarkMode, toggleTheme }) {
     const [items, setItems] = useState(initialItems);
-    const { confirm, openConfirm, closeConfirm, confirmProps } = useConfirmModal(CONFIRM_ACTIONS);
-    const { searchTerm, setSearchTerm, filtered: filteredItems } = useSearch(items, SEARCH_FIELDS);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [confirm, setConfirm] = useState({ open: false, id: null, action: '' });
 
-    // Memoize stats so they only recompute when items change
-    const stats = useMemo(() => ({
+    // --- INLINE THEME DEFINITION ---
+    const theme = {
+        bg: isDarkMode ? '#1a1d21' : 'transparent',
+        cardBg: isDarkMode ? '#24292e' : '#ffffff',
+        text: isDarkMode ? '#ececec' : '#2d3436',
+        subText: isDarkMode ? '#b1b1b1' : '#636e72',
+        border: isDarkMode ? '#30363d' : '#edf2f7'
+    };
+
+    const stats = {
         pendingReview: items.filter(i => i.status === 'Pending Review').length,
         approvedToday: items.filter(i => i.status === 'Approved').length,
         totalReports: items.length,
         rejected: items.filter(i => i.status === 'Rejected').length,
-    }), [items]);
+    };
 
-    const handleConfirm = useCallback(() => {
+    const handleConfirm = () => {
         const { id, action } = confirm;
         if (action === 'approve') {
             setItems(prev => prev.map(item =>
@@ -48,29 +37,71 @@ function Dashboard() {
                 item.id === id ? { ...item, status: 'Rejected' } : item
             ));
         }
-        closeConfirm();
-    }, [confirm, closeConfirm]);
+        setConfirm({ open: false, id: null, action: '' });
+    };
+
+    const filteredItems = items.filter(item =>
+        item.item.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.submittedBy.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     return (
-        <main className="dashboard-container">
-            <header className="dashboard-header">
-                <h1>SmartFinder Admin Dashboard</h1>
-                <p>Welcome back, Admin.</p>
+        <main className="dashboard-container" style={{ backgroundColor: theme.bg, color: theme.text, minHeight: '100%', padding: '20px', transition: 'all 0.3s' }}>
+            <header className="dashboard-header" style={{ marginBottom: '30px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                        <h1 style={{ color: isDarkMode ? '#00cec9' : '#00b894', margin: 0 }}>SmartFinder Admin Dashboard</h1>
+                        <p style={{ color: theme.subText }}>Welcome back, Admin.</p>
+                    </div>
+                    
+                    {/* Toggle button */}
+                    <button 
+                        onClick={toggleTheme}
+                        style={{
+                            padding: '8px 16px',
+                            borderRadius: '20px',
+                            border: `1px solid ${theme.border}`,
+                            backgroundColor: theme.cardBg,
+                            color: theme.text,
+                            cursor: 'pointer',
+                            fontWeight: '600'
+                        }}
+                    >
+                        {isDarkMode ? '☀️ Light Mode' : '🌙 Dark Mode'}
+                    </button>
+                </div>
             </header>
 
-            <section className="stats-grid">
-                <StatCard title="Pending Review" count={stats.pendingReview} variant="warning" />
-                <StatCard title="Approved Today" count={stats.approvedToday} />
-                <StatCard title="Total Reports" count={stats.totalReports} />
-                <StatCard title="Rejected" count={stats.rejected} variant="danger" />
+            <section className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '30px' }}>
+                {/* We apply the cardBg to your StatCards */}
+                <div style={{ backgroundColor: theme.cardBg, padding: '20px', borderRadius: '12px', border: `1px solid ${theme.border}` }}>
+                    <StatCard title="Pending Review" count={stats.pendingReview} variant="warning" />
+                </div>
+                <div style={{ backgroundColor: theme.cardBg, padding: '20px', borderRadius: '12px', border: `1px solid ${theme.border}` }}>
+                    <StatCard title="Approved Today" count={stats.approvedToday} />
+                </div>
+                <div style={{ backgroundColor: theme.cardBg, padding: '20px', borderRadius: '12px', border: `1px solid ${theme.border}` }}>
+                    <StatCard title="Total Reports" count={stats.totalReports} />
+                </div>
+                <div style={{ backgroundColor: theme.cardBg, padding: '20px', borderRadius: '12px', border: `1px solid ${theme.border}` }}>
+                    <StatCard title="Rejected" count={stats.rejected} variant="danger" />
+                </div>
             </section>
 
-            <section className="recent-activity">
-                <div className="search-header">
-                    <h2>Pending Post Verifications</h2>
+            <section className="recent-activity" style={{ backgroundColor: theme.cardBg, padding: '25px', borderRadius: '15px', border: `1px solid ${theme.border}` }}>
+                <div className="search-header" style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h2 style={{ margin: 0 }}>Pending Post Verifications</h2>
                     <input
                         type="text"
-                        className="search-input"
+                        style={{
+                            backgroundColor: isDarkMode ? '#1a1d21' : '#f1f3f5',
+                            border: `1px solid ${theme.border}`,
+                            color: theme.text,
+                            padding: '10px',
+                            borderRadius: '8px',
+                            width: '300px'
+                        }}
                         placeholder="Search item, location, or student..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -78,55 +109,49 @@ function Dashboard() {
                 </div>
 
                 <div className="table-wrapper">
-                    <table>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                         <thead>
-                            <tr>
-                                <th>Type</th>
-                                <th>Item Name</th>
-                                <th>Submitted By</th>
-                                <th>Location</th>
-                                <th>Date</th>
-                                <th>Status</th>
-                                <th>Actions</th>
+                            <tr style={{ textAlign: 'left', borderBottom: `2px solid ${theme.border}` }}>
+                                <th style={{ padding: '12px' }}>Type</th>
+                                <th style={{ padding: '12px' }}>Item Name</th>
+                                <th style={{ padding: '12px' }}>Submitted By</th>
+                                <th style={{ padding: '12px' }}>Location</th>
+                                <th style={{ padding: '12px' }}>Date</th>
+                                <th style={{ padding: '12px' }}>Status</th>
+                                <th style={{ padding: '12px' }}>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {filteredItems.map((report) => (
-                                <tr key={report.id}>
-                                    <td><StatusBadge status={report.type} /></td>
-                                    <td>{report.item}</td>
-                                    <td>{report.submittedBy}</td>
-                                    <td>{report.location}</td>
-                                    <td className="date-cell">{report.date}</td>
-                                    <td><StatusBadge status={report.status} /></td>
-                                    <td>
+                                <tr key={report.id} style={{ borderBottom: `1px solid ${theme.border}` }}>
+                                    <td style={{ padding: '12px' }}><StatusBadge status={report.type} /></td>
+                                    <td style={{ padding: '12px' }}>{report.item}</td>
+                                    <td style={{ padding: '12px' }}>{report.submittedBy}</td>
+                                    <td style={{ padding: '12px' }}>{report.location}</td>
+                                    <td style={{ padding: '12px' }}>{report.date}</td>
+                                    <td style={{ padding: '12px' }}><StatusBadge status={report.status} /></td>
+                                    <td style={{ padding: '12px' }}>
                                         {report.status === 'Pending Review' ? (
-                                            <>
-                                                <button className="btn-approve" onClick={() => openConfirm(report.id, 'approve')}>Approve</button>
-                                                <button className="btn-reject" onClick={() => openConfirm(report.id, 'reject')}>Reject</button>
-                                            </>
+                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                                <button className="btn-approve" onClick={() => setConfirm({ open: true, id: report.id, action: 'approve' })}>Approve</button>
+                                                <button className="btn-reject" onClick={() => setConfirm({ open: true, id: report.id, action: 'reject' })}>Reject</button>
+                                            </div>
                                         ) : (
-                                            <span className="action-done">—</span>
+                                            <span>—</span>
                                         )}
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
-                    {filteredItems.length === 0 && (
-                        <p className="empty-state">No items found.</p>
-                    )}
                 </div>
             </section>
 
             <ConfirmModal
                 isOpen={confirm.open}
-                title={confirmProps.title}
-                message={confirmProps.message}
-                confirmLabel={confirmProps.confirmLabel}
-                variant={confirmProps.variant}
                 onConfirm={handleConfirm}
-                onCancel={closeConfirm}
+                onCancel={() => setConfirm({ open: false, id: null, action: '' })}
+                {...confirm} 
             />
         </main>
     );

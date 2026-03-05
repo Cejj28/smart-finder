@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import logo from '../assets/logo2.png';
 import '../styles/Login.css';
 
@@ -22,9 +23,9 @@ function Login({ onLogin }) {
 
         setLoading(true);
 
-        // Simulate authentication delay
+        // We finna fake a lil delay like it's hittin' the server real quick, cu joed bad i e
         setTimeout(() => {
-            // Mock credentials — admin@ustp.com / admin123
+            // Mock login — admin@ustp.edu / admin123, that's the sauce right there
             if (form.email === 'admin@ustp.edu' && form.password === 'admin123') {
                 onLogin({ name: 'Admin User', email: form.email, role: 'Administrator' });
             } else {
@@ -57,6 +58,7 @@ function Login({ onLogin }) {
                     )}
 
                     <form onSubmit={handleSubmit} className="login-form">
+                        {/* Email & password fields — we keepin' it controlled so it stay in sync, straight up */}
                         <div className="login-field">
                             <label htmlFor="login-email">Email Address</label>
                             <div className="input-wrapper">
@@ -91,6 +93,7 @@ function Login({ onLogin }) {
                             </div>
                         </div>
 
+                        {/* Submit button — lock it down when loadin' so ain't nobody double tappin', feel me */}
                         <button type="submit" className="login-btn" disabled={loading}>
                             {loading ? (
                                 <span className="login-spinner"></span>
