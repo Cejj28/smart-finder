@@ -372,7 +372,97 @@
     color: var(--text-dark);
     font-weight: 500;
 }
+/* --- New Admin Profile Enhancements --- */
 
+/* Horizontal Divider for logical separation */
+.divider {
+    border: 0;
+    border-top: 1px solid rgba(14, 165, 164, 0.1);
+    margin: 1.5rem 0;
+}
+
+/* Status Indicator with Dot */
+/* Updated container to stack items vertically */
+.profile-avatar-section {
+    display: flex;
+    flex-direction: column; /* Stacks avatar and status vertically */
+    align-items: flex-start; /* Aligns them to the left */
+    gap: 0.75rem; /* Space between the avatar/badge and the Active status */
+    margin-bottom: 1.5rem;
+}
+
+/* Specific styling for the Active indicator to sit neatly under the badge */
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem; /* Slightly smaller for better hierarchy */
+    font-weight: 700;
+    color: var(--success-color);
+    background: rgba(16, 185, 129, 0.1);
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    width: fit-content; /* Ensures the background only wraps the text */
+}
+
+/* Keep the rest of your pulse animation and status-dot as is */
+.status-dot {
+    height: 8px;
+    width: 8px;
+    background-color: var(--success-color);
+    border-radius: 50%;
+    display: inline-block;
+    box-shadow: 0 0 8px var(--success-color);
+    animation: pulse 2s infinite;
+}
+
+/* Grid for ID and Title */
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+/* Text Formatting */
+.text-bold {
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.timestamp {
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: 600;
+    color: var(--text-medium);
+}
+
+.bio-text {
+    line-height: 1.6;
+    font-style: italic;
+    color: var(--text-medium);
+}
+
+/* Security info section styling */
+.security-info {
+    border-bottom: none;
+    background: rgba(14, 165, 164, 0.03);
+    padding: 10px;
+    border-radius: 6px;
+}
+
+/* Animations */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+/* Responsive fix for the Info Grid */
+@media (max-width: 480px) {
+    .info-grid {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+}
 /* Responsive */
 @media (max-width: 768px) {
     .page-container {
