@@ -49,10 +49,14 @@ export const usersData = [
 // Admin profile
 export const adminProfile = {
     name: 'Admin User',
-    email: 'admin@ustp.edu',
+    email: 'admin@ustp.edu.ph',
     phone: '09170000000',
-    bio: 'System administrator for SmartFinder Lost & Found Management System.',
-    role: 'Super Admin',
+    role: 'SUPER ADMIN',
+    employeeId: 'USTP-2024-3213',
+    jobTitle: 'System Administrator',
+    location: 'CITC Building, 4th Floor, Dean\'s Office',
+    status: 'Active',
+    bio: 'Lead System Administrator at USTP. Responsible for the maintenance, security, and integrity of the SmartFinder database. For technical escalations, please contact the IT Helpdesk.',
 };
 
 // Reports — all item activity
