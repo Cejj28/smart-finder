@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import logo from '../assets/logo2.png';
 import '../styles/Login.css';
+import { loginApi } from '../services/api';
 
 function Login({ onLogin }) {
     const [form, setForm] = useState({ email: '', password: '' });
@@ -12,7 +13,7 @@ function Login({ onLogin }) {
         if (error) setError('');
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (!form.email || !form.password) {
@@ -22,16 +23,18 @@ function Login({ onLogin }) {
 
         setLoading(true);
 
-        // Simulate authentication delay
-        setTimeout(() => {
-            // Mock credentials — admin@ustp.com / admin123
-            if (form.email === 'admin@ustp.edu' && form.password === 'admin123') {
-                onLogin({ name: 'Admin User', email: form.email, role: 'Administrator' });
-            } else {
-                setError('Invalid email or password.');
-                setLoading(false);
-            }
-        }, 800);
+        try {
+            const data = await loginApi(form.email, form.password);
+            onLogin({ 
+                name: data.username, 
+                email: form.email, 
+                role: 'Administrator',
+                token: data.token 
+            });
+        } catch (err) {
+            setError('Invalid email or password.');
+            setLoading(false);
+        }
     };
 
     return (

@@ -1,10 +1,10 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import StatCard from '../components/StatCard';
 import StatusBadge from '../components/StatusBadge';
 import ConfirmModal from '../components/ConfirmModal';
 import useConfirmModal from '../hooks/useConfirmModal';
 import useSearch from '../hooks/useSearch';
-import { recentItems as initialItems } from '../data/mockData';
+import { fetchItems, updateItemStatus } from '../services/api';
 import '../styles/App.css';
 
 const SEARCH_FIELDS = ['item', 'location', 'submittedBy'];
@@ -25,7 +25,19 @@ const CONFIRM_ACTIONS = {
 };
 
 function Dashboard() {
-    const [items, setItems] = useState(initialItems);
+    const [items, setItems] = useState([]);
+    
+    useEffect(() => {
+        const loadItems = async () => {
+            try {
+                const data = await fetchItems();
+                setItems(data);
+            } catch (err) {
+                console.error('Failed to load items:', err);
+            }
+        };
+        loadItems();
+    }, []);
     const { confirm, openConfirm, closeConfirm, confirmProps } = useConfirmModal(CONFIRM_ACTIONS);
     const { searchTerm, setSearchTerm, filtered: filteredItems } = useSearch(items, SEARCH_FIELDS);
 
@@ -37,16 +49,22 @@ function Dashboard() {
         rejected: items.filter(i => i.status === 'Rejected').length,
     }), [items]);
 
-    const handleConfirm = useCallback(() => {
+    const handleConfirm = useCallback(async () => {
         const { id, action } = confirm;
-        if (action === 'approve') {
-            setItems(prev => prev.map(item =>
-                item.id === id ? { ...item, status: 'Approved' } : item
-            ));
-        } else if (action === 'reject') {
-            setItems(prev => prev.map(item =>
-                item.id === id ? { ...item, status: 'Rejected' } : item
-            ));
+        try {
+            if (action === 'approve') {
+                await updateItemStatus(id, 'Approved');
+                setItems(prev => prev.map(item =>
+                    item.id === id ? { ...item, status: 'Approved' } : item
+                ));
+            } else if (action === 'reject') {
+                await updateItemStatus(id, 'Rejected');
+                setItems(prev => prev.map(item =>
+                    item.id === id ? { ...item, status: 'Rejected' } : item
+                ));
+            }
+        } catch (err) {
+            console.error('Update status failed', err);
         }
         closeConfirm();
     }, [confirm, closeConfirm]);

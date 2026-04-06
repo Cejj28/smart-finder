@@ -49,11 +49,15 @@ function App() {
 
   const handleLogin = useCallback((user) => {
     localStorage.setItem('sf_auth', 'true');
+    if (user.token) {
+        localStorage.setItem('sf_token', user.token);
+    }
     setIsAuthenticated(true);
   }, []);
 
   const handleLogout = useCallback(() => {
     localStorage.removeItem('sf_auth');
+    localStorage.removeItem('sf_token');
     setIsAuthenticated(false);
   }, []);
 

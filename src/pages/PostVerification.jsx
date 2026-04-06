@@ -1,10 +1,10 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import StatusBadge from '../components/StatusBadge';
 import ConfirmModal from '../components/ConfirmModal';
 import useConfirmModal from '../hooks/useConfirmModal';
 import useSearch from '../hooks/useSearch';
 import useFormHandler from '../hooks/useFormHandler';
-import { pendingPosts as initialPosts } from '../data/mockData';
+import { fetchItems, updateItemStatus } from '../services/api';
 import '../styles/Pages.css';
 
 const EMPTY_FORM = { type: 'Lost', item: '', location: '', reporter: '', date: '', description: '' };
@@ -26,7 +26,20 @@ const CONFIRM_ACTIONS = {
 };
 
 function PostVerification() {
-    const [posts, setPosts] = useState(initialPosts);
+    const [posts, setPosts] = useState([]);
+    
+    useEffect(() => {
+        const load = async () => {
+            try {
+                const data = await fetchItems();
+                setPosts(data);
+            } catch(e) {
+                console.error(e);
+            }
+        }
+        load();
+    }, []);
+
     const { form, feedback, handleChange, resetForm, showFeedback } = useFormHandler(EMPTY_FORM);
     const { confirm, openConfirm, closeConfirm, confirmProps } = useConfirmModal(CONFIRM_ACTIONS);
     const { searchTerm, setSearchTerm, filtered } = useSearch(posts, SEARCH_FIELDS);
@@ -47,12 +60,18 @@ function PostVerification() {
         showFeedback('Post added successfully!');
     }, [form, resetForm, showFeedback]);
 
-    const handleConfirm = useCallback(() => {
+    const handleConfirm = useCallback(async () => {
         const { id, action } = confirm;
-        if (action === 'verify') {
-            setPosts(prev => prev.map(p => p.id === id ? { ...p, status: 'Verified' } : p));
-        } else if (action === 'reject') {
-            setPosts(prev => prev.map(p => p.id === id ? { ...p, status: 'Rejected' } : p));
+        try {
+            if (action === 'verify') {
+                await updateItemStatus(id, 'Verified');
+                setPosts(prev => prev.map(p => p.id === id ? { ...p, status: 'Verified' } : p));
+            } else if (action === 'reject') {
+                await updateItemStatus(id, 'Rejected');
+                setPosts(prev => prev.map(p => p.id === id ? { ...p, status: 'Rejected' } : p));
+            }
+        } catch (e) {
+            console.error(e);
         }
         closeConfirm();
     }, [confirm, closeConfirm]);

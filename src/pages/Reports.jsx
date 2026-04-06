@@ -1,10 +1,21 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import StatusBadge from '../components/StatusBadge';
-import { allReports as initialReports } from '../data/mockData';
+import { fetchItems } from '../services/api';
 import '../styles/Pages.css';
 
 function Reports() {
-    const [reports] = useState(initialReports);
+    const [reports, setReports] = useState([]);
+    useEffect(() => {
+        const load = async () => {
+            try {
+                const data = await fetchItems();
+                setReports(data);
+            } catch(e) {
+                console.error(e);
+            }
+        }
+        load();
+    }, []);
     const [filters, setFilters] = useState({
         type: 'All',
         status: 'All',
