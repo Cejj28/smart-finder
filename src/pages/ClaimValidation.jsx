@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import StatusBadge from '../components/StatusBadge';
 import ConfirmModal from '../components/ConfirmModal';
+import DetailPanel from '../components/DetailPanel';
 import useConfirmModal from '../hooks/useConfirmModal';
 import useSearch from '../hooks/useSearch';
 import useFormHandler from '../hooks/useFormHandler';
@@ -29,6 +30,12 @@ const CONFIRM_ACTIONS = {
         confirmLabel: 'Release',
         variant: 'warning',
     },
+    submit: {
+        title: 'Confirm Claim',
+        message: 'Are you sure you want to log this claim?',
+        confirmLabel: 'Submit Claim',
+        variant: 'primary',
+    },
 };
 
 function ClaimValidation() {
@@ -36,6 +43,7 @@ function ClaimValidation() {
     const { form, feedback, handleChange, resetForm, showFeedback } = useFormHandler(EMPTY_FORM);
     const { confirm, openConfirm, closeConfirm, confirmProps } = useConfirmModal(CONFIRM_ACTIONS);
     const { searchTerm, setSearchTerm, filtered } = useSearch(claims, SEARCH_FIELDS);
+    const [selectedClaim, setSelectedClaim] = useState(null);
 
     // Memoize mini-stat counts so they only recompute when claims change
     const miniStats = useMemo(() => ({
@@ -51,20 +59,22 @@ function ClaimValidation() {
             showFeedback('Please fill in all required fields.', 0);
             return;
         }
-        const newClaim = {
-            id: Date.now(),
-            ...form,
-            status: 'Pending',
-            releaseDate: '',
-        };
-        setClaims(prev => [newClaim, ...prev]);
-        resetForm();
-        showFeedback('Claim logged successfully!');
-    }, [form, resetForm, showFeedback]);
+        openConfirm(null, 'submit');
+    }, [form, openConfirm, showFeedback]);
 
     const handleConfirm = useCallback(() => {
         const { id, action } = confirm;
-        if (action === 'approve') {
+        if (action === 'submit') {
+            const newClaim = {
+                id: Date.now(),
+                ...form,
+                status: 'Pending',
+                releaseDate: '',
+            };
+            setClaims(prev => [newClaim, ...prev]);
+            resetForm();
+            showFeedback('Claim logged successfully!');
+        } else if (action === 'approve') {
             setClaims(prev => prev.map(c =>
                 c.id === id ? { ...c, status: 'Approved', releaseDate: new Date().toISOString().split('T')[0] } : c
             ));
@@ -78,7 +88,18 @@ function ClaimValidation() {
             ));
         }
         closeConfirm();
-    }, [confirm, closeConfirm]);
+        setSelectedClaim(null);
+    }, [confirm, closeConfirm, form, resetForm, showFeedback]);
+
+    const detailFields = [
+        { label: 'Claimant Option', key: 'claimant' },
+        { label: 'Item', key: 'item' },
+        { label: 'Proof of Ownership', key: 'proof' },
+        { label: 'Contact', key: 'contact' },
+        { label: 'Claim Date', key: 'date' },
+        { label: 'Status', key: 'status', render: (val) => <StatusBadge status={val} /> },
+        { label: 'Release Date', key: 'releaseDate', render: (val) => val || '—' },
+    ];
 
     return (
         <main className="page-container">
@@ -165,12 +186,11 @@ function ClaimValidation() {
                                 <th>Date</th>
                                 <th>Status</th>
                                 <th>Release Date</th>
-                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {filtered.map(c => (
-                                <tr key={c.id}>
+                                <tr key={c.id} className="clickable-row" onClick={() => setSelectedClaim(c)}>
                                     <td>{c.claimant}</td>
                                     <td>{c.item}</td>
                                     <td>{c.proof}</td>
@@ -178,20 +198,6 @@ function ClaimValidation() {
                                     <td className="date-cell">{c.date}</td>
                                     <td><StatusBadge status={c.status} /></td>
                                     <td className="date-cell">{c.releaseDate || '—'}</td>
-                                    <td>
-                                        {c.status === 'Pending' && (
-                                            <>
-                                                <button className="btn-approve" onClick={() => openConfirm(c.id, 'approve')}>Approve</button>
-                                                <button className="btn-reject" onClick={() => openConfirm(c.id, 'reject')}>Reject</button>
-                                            </>
-                                        )}
-                                        {c.status === 'Approved' && (
-                                            <button className="btn-release" onClick={() => openConfirm(c.id, 'release')}>Release</button>
-                                        )}
-                                        {(c.status === 'Released' || c.status === 'Rejected') && (
-                                            <span className="action-done">—</span>
-                                        )}
-                                    </td>
                                 </tr>
                             ))}
                         </tbody>
@@ -208,6 +214,27 @@ function ClaimValidation() {
                 variant={confirmProps.variant}
                 onConfirm={handleConfirm}
                 onCancel={closeConfirm}
+            />
+
+            <DetailPanel
+                isOpen={!!selectedClaim}
+                onClose={() => setSelectedClaim(null)}
+                title="Claim Details"
+                data={selectedClaim || {}}
+                fields={detailFields}
+                actions={
+                    <>
+                        {selectedClaim?.status === 'Pending' && (
+                            <>
+                                <button className="btn-danger" onClick={() => openConfirm(selectedClaim.id, 'reject')}>Reject</button>
+                                <button className="btn-primary" onClick={() => openConfirm(selectedClaim.id, 'approve')}>Approve</button>
+                            </>
+                        )}
+                        {selectedClaim?.status === 'Approved' && (
+                            <button className="btn-release" onClick={() => openConfirm(selectedClaim.id, 'release')}>Release Item</button>
+                        )}
+                    </>
+                }
             />
         </main>
     );

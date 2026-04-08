@@ -2,12 +2,14 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import StatCard from '../components/StatCard';
 import StatusBadge from '../components/StatusBadge';
 import ConfirmModal from '../components/ConfirmModal';
+import DetailPanel from '../components/DetailPanel';
 import useConfirmModal from '../hooks/useConfirmModal';
 import useSearch from '../hooks/useSearch';
 import { fetchItems, updateItemStatus } from '../services/api';
 import '../styles/App.css';
+import '../styles/Pages.css';
 
-const SEARCH_FIELDS = ['item', 'location', 'submittedBy'];
+const SEARCH_FIELDS = ['item_name', 'location', 'submittedBy'];
 
 const CONFIRM_ACTIONS = {
     approve: {
@@ -40,6 +42,7 @@ function Dashboard() {
     }, []);
     const { confirm, openConfirm, closeConfirm, confirmProps } = useConfirmModal(CONFIRM_ACTIONS);
     const { searchTerm, setSearchTerm, filtered: filteredItems } = useSearch(items, SEARCH_FIELDS);
+    const [selectedItem, setSelectedItem] = useState(null);
 
     // Memoize stats so they only recompute when items change
     const stats = useMemo(() => ({
@@ -67,7 +70,25 @@ function Dashboard() {
             console.error('Update status failed', err);
         }
         closeConfirm();
+        setSelectedItem(null); // Close panel after action
     }, [confirm, closeConfirm]);
+
+    const detailFields = [
+        { label: 'Type', key: 'type', render: (val) => <StatusBadge status={val} /> },
+        { label: 'Item Name', key: 'item_name' },
+        { label: 'Submitted By', key: 'submittedBy' },
+        { label: 'Location', key: 'location' },
+        { label: 'Date', key: 'date' },
+        { label: 'Contact Info', key: 'contact_info' },
+        { label: 'Status', key: 'status', render: (val) => <StatusBadge status={val} /> },
+        { 
+            label: 'Photo', 
+            key: 'image_url', 
+            render: (val) => val 
+                ? <img src={val.startsWith('http') ? val : `http://localhost:8000${val}`} alt="Item" style={{ width: '100%', borderRadius: '8px', marginTop: '8px' }} /> 
+                : <span style={{ color: '#94A3B8' }}>No photo available</span>
+        },
+    ];
 
     return (
         <main className="dashboard-container">
@@ -105,28 +126,17 @@ function Dashboard() {
                                 <th>Location</th>
                                 <th>Date</th>
                                 <th>Status</th>
-                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {filteredItems.map((report) => (
-                                <tr key={report.id}>
+                                <tr key={report.id} className="clickable-row" onClick={() => setSelectedItem(report)}>
                                     <td><StatusBadge status={report.type} /></td>
-                                    <td>{report.item}</td>
+                                    <td>{report.item_name}</td>
                                     <td>{report.submittedBy}</td>
                                     <td>{report.location}</td>
                                     <td className="date-cell">{report.date}</td>
                                     <td><StatusBadge status={report.status} /></td>
-                                    <td>
-                                        {report.status === 'Pending Review' ? (
-                                            <>
-                                                <button className="btn-approve" onClick={() => openConfirm(report.id, 'approve')}>Approve</button>
-                                                <button className="btn-reject" onClick={() => openConfirm(report.id, 'reject')}>Reject</button>
-                                            </>
-                                        ) : (
-                                            <span className="action-done">—</span>
-                                        )}
-                                    </td>
                                 </tr>
                             ))}
                         </tbody>
@@ -145,6 +155,22 @@ function Dashboard() {
                 variant={confirmProps.variant}
                 onConfirm={handleConfirm}
                 onCancel={closeConfirm}
+            />
+
+            <DetailPanel
+                isOpen={!!selectedItem}
+                onClose={() => setSelectedItem(null)}
+                title="Post Details"
+                data={selectedItem || {}}
+                fields={detailFields}
+                actions={
+                    selectedItem?.status === 'Pending Review' ? (
+                        <>
+                            <button className="btn-danger" onClick={() => openConfirm(selectedItem.id, 'reject')}>Reject</button>
+                            <button className="btn-primary" onClick={() => openConfirm(selectedItem.id, 'approve')}>Approve</button>
+                        </>
+                    ) : null
+                }
             />
         </main>
     );

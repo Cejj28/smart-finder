@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import ConfirmModal from '../components/ConfirmModal';
+import DetailPanel from '../components/DetailPanel';
 import useConfirmModal from '../hooks/useConfirmModal';
 import useSearch from '../hooks/useSearch';
 import useFormHandler from '../hooks/useFormHandler';
@@ -14,6 +15,7 @@ function UserManagement() {
     const [editingId, setEditingId] = useState(null);
     const { form, setForm, feedback, handleChange, resetForm, showFeedback, setFeedback } = useFormHandler(EMPTY_FORM);
     const { searchTerm, setSearchTerm, filtered } = useSearch(users, SEARCH_FIELDS);
+    const [selectedUser, setSelectedUser] = useState(null);
 
     // Dynamic confirm props because toggle action depends on current user status
     const getConfirmAction = useCallback((action, id) => {
@@ -25,10 +27,12 @@ function UserManagement() {
                 const newStatus = user?.status === 'Active' ? 'Inactive' : 'Active';
                 return { title: 'Change User Status', message: `Are you sure you want to set this user to ${newStatus}?`, confirmLabel: `Set ${newStatus}`, variant: 'warning' };
             }
+            case 'submit':
+                return { title: editingId ? 'Update User' : 'Add User', message: `Are you sure you want to ${editingId ? 'update' : 'add'} this user?`, confirmLabel: editingId ? 'Update' : 'Add', variant: 'primary' };
             default:
                 return {};
         }
-    }, [users]);
+    }, [users, editingId]);
 
     const { confirm, openConfirm, closeConfirm, confirmProps } = useConfirmModal(getConfirmAction);
 
@@ -38,18 +42,8 @@ function UserManagement() {
             showFeedback('Name and email are required.', 0);
             return;
         }
-
-        if (editingId) {
-            setUsers(prev => prev.map(u => u.id === editingId ? { ...u, ...form } : u));
-            setEditingId(null);
-            showFeedback('User updated successfully!');
-        } else {
-            const newUser = { id: Date.now(), ...form };
-            setUsers(prev => [newUser, ...prev]);
-            showFeedback('User added successfully!');
-        }
-        resetForm();
-    }, [form, editingId, resetForm, showFeedback]);
+        openConfirm(null, 'submit');
+    }, [form, openConfirm, showFeedback]);
 
     const handleEdit = useCallback((user) => {
         setEditingId(user.id);
@@ -59,7 +53,18 @@ function UserManagement() {
 
     const handleConfirm = useCallback(() => {
         const { id, action } = confirm;
-        if (action === 'delete') {
+        if (action === 'submit') {
+            if (editingId) {
+                setUsers(prev => prev.map(u => u.id === editingId ? { ...u, ...form } : u));
+                setEditingId(null);
+                showFeedback('User updated successfully!');
+            } else {
+                const newUser = { id: Date.now(), ...form };
+                setUsers(prev => [newUser, ...prev]);
+                showFeedback('User added successfully!');
+            }
+            resetForm();
+        } else if (action === 'delete') {
             setUsers(prev => prev.filter(u => u.id !== id));
             if (editingId === id) {
                 setEditingId(null);
@@ -69,9 +74,21 @@ function UserManagement() {
             setUsers(prev => prev.map(u =>
                 u.id === id ? { ...u, status: u.status === 'Active' ? 'Inactive' : 'Active' } : u
             ));
+            // Update selected user if currently open
+            setSelectedUser(prev => prev && prev.id === id ? { ...prev, status: prev.status === 'Active' ? 'Inactive' : 'Active' } : prev);
         }
         closeConfirm();
-    }, [confirm, editingId, closeConfirm, resetForm]);
+        if (action === 'delete') setSelectedUser(null);
+    }, [confirm, editingId, closeConfirm, resetForm, form, showFeedback]);
+
+    const detailFields = [
+        { label: 'Full Name', key: 'name' },
+        { label: 'Email Address', key: 'email' },
+        { label: 'Role', key: 'role', render: (val) => <span className="role-badge">{val}</span> },
+        { label: 'Status', key: 'status', render: (val, u) => (
+            <span className={`status-indicator ${val === 'Active' ? 'active' : 'inactive'}`} onClick={() => openConfirm(u.id, 'toggle')} title="Click to toggle status">{val}</span>
+        )}
+    ];
 
     const handleCancel = useCallback(() => {
         setEditingId(null);
@@ -149,25 +166,18 @@ function UserManagement() {
                                 <th>Email</th>
                                 <th>Role</th>
                                 <th>Status</th>
-                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {filtered.map(u => (
-                                <tr key={u.id}>
+                                <tr key={u.id} className="clickable-row" onClick={() => setSelectedUser(u)}>
                                     <td>{u.name}</td>
                                     <td>{u.email}</td>
                                     <td><span className="role-badge">{u.role}</span></td>
                                     <td>
-                                        <span className={`status-indicator ${u.status === 'Active' ? 'active' : 'inactive'}`}
-                                            onClick={() => openConfirm(u.id, 'toggle')}
-                                            title="Click to toggle status">
+                                        <span className={`status-indicator ${u.status === 'Active' ? 'active' : 'inactive'}`}>
                                             {u.status}
                                         </span>
-                                    </td>
-                                    <td>
-                                        <button className="btn-edit" onClick={() => handleEdit(u)}>Edit</button>
-                                        <button className="btn-delete" onClick={() => openConfirm(u.id, 'delete')}>Delete</button>
                                     </td>
                                 </tr>
                             ))}
@@ -185,6 +195,21 @@ function UserManagement() {
                 variant={confirmProps.variant}
                 onConfirm={handleConfirm}
                 onCancel={closeConfirm}
+            />
+
+            <DetailPanel
+                isOpen={!!selectedUser}
+                onClose={() => setSelectedUser(null)}
+                title="User Profile Details"
+                data={selectedUser || {}}
+                fields={detailFields}
+                actions={
+                    <>
+                        <button className="btn-secondary" onClick={() => openConfirm(selectedUser.id, 'toggle')}>Toggle Status</button>
+                        <button className="btn-edit" onClick={() => { handleEdit(selectedUser); setSelectedUser(null); }}>Edit</button>
+                        <button className="btn-delete" onClick={() => openConfirm(selectedUser.id, 'delete')}>Delete</button>
+                    </>
+                }
             />
         </main>
     );

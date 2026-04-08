@@ -1,14 +1,14 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import StatusBadge from '../components/StatusBadge';
 import ConfirmModal from '../components/ConfirmModal';
+import DetailPanel from '../components/DetailPanel';
 import useConfirmModal from '../hooks/useConfirmModal';
 import useSearch from '../hooks/useSearch';
-import useFormHandler from '../hooks/useFormHandler';
-import { fetchItems, updateItemStatus } from '../services/api';
+import { fetchItems, updateItemStatus, createItem } from '../services/api';
 import '../styles/Pages.css';
 
-const EMPTY_FORM = { type: 'Lost', item: '', location: '', reporter: '', date: '', description: '' };
-const SEARCH_FIELDS = ['item', 'reporter', 'location'];
+const EMPTY_FORM = { type: 'Lost', item_name: '', location: '', description: '', contact_info: '' };
+const SEARCH_FIELDS = ['item_name', 'reporter', 'location'];
 
 const CONFIRM_ACTIONS = {
     verify: {
@@ -23,58 +23,136 @@ const CONFIRM_ACTIONS = {
         confirmLabel: 'Reject',
         variant: 'danger',
     },
+    submit: {
+        title: 'Confirm Submission',
+        message: 'Are you sure you want to submit this post to the system?',
+        confirmLabel: 'Submit Post',
+        variant: 'primary',
+    },
 };
 
 function PostVerification() {
     const [posts, setPosts] = useState([]);
-    
+    const [form, setForm] = useState(EMPTY_FORM);
+    const [imageFile, setImageFile] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
+    const [feedback, setFeedback] = useState('');
+    const [submitting, setSubmitting] = useState(false);
+    const fileInputRef = useRef(null);
+
     useEffect(() => {
         const load = async () => {
             try {
                 const data = await fetchItems();
                 setPosts(data);
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
             }
-        }
+        };
         load();
     }, []);
 
-    const { form, feedback, handleChange, resetForm, showFeedback } = useFormHandler(EMPTY_FORM);
     const { confirm, openConfirm, closeConfirm, confirmProps } = useConfirmModal(CONFIRM_ACTIONS);
     const { searchTerm, setSearchTerm, filtered } = useSearch(posts, SEARCH_FIELDS);
+    const [selectedPost, setSelectedPost] = useState(null);
+
+    const handleChange = useCallback((e) => {
+        const { name, value } = e.target;
+        setForm(prev => ({ ...prev, [name]: value }));
+    }, []);
+
+    const handleImageChange = useCallback((e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        setImageFile(file);
+        setImagePreview(URL.createObjectURL(file));
+    }, []);
+
+    const handleRemoveImage = useCallback(() => {
+        setImageFile(null);
+        setImagePreview(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    }, []);
+
+    const showFeedback = useCallback((msg) => {
+        setFeedback(msg);
+        setTimeout(() => setFeedback(''), 4000);
+    }, []);
+
+    const resetForm = useCallback(() => {
+        setForm(EMPTY_FORM);
+        setImageFile(null);
+        setImagePreview(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    }, []);
 
     const handleSubmit = useCallback((e) => {
         e.preventDefault();
-        if (!form.item || !form.location || !form.reporter || !form.date) {
-            showFeedback('Please fill in all required fields.', 0);
+        if (!form.item_name.trim() || !form.location.trim()) {
+            setFeedback('Item name and location are required.');
             return;
         }
-        const newPost = {
-            id: Date.now(),
-            ...form,
-            status: 'Pending',
-        };
-        setPosts(prev => [newPost, ...prev]);
-        resetForm();
-        showFeedback('Post added successfully!');
-    }, [form, resetForm, showFeedback]);
+        openConfirm(null, 'submit');
+    }, [form, openConfirm]);
 
     const handleConfirm = useCallback(async () => {
         const { id, action } = confirm;
         try {
-            if (action === 'verify') {
+            if (action === 'submit') {
+                setSubmitting(true);
+                const created = await createItem({ ...form, imageFile });
+                // Map returned item to match local shape
+                const newPost = {
+                    id: created.id,
+                    type: created.type,
+                    item_name: created.item_name,
+                    location: created.location,
+                    description: created.description,
+                    contact_info: created.contact_info,
+                    image_url: created.image || null,
+                    reporter: 'Admin',
+                    date: new Date(created.created_at).toLocaleDateString(),
+                    status: created.status || 'Pending Review',
+                };
+                setPosts(prev => [newPost, ...prev]);
+                resetForm();
+                showFeedback('Post submitted successfully!');
+            } else if (action === 'verify') {
                 await updateItemStatus(id, 'Verified');
                 setPosts(prev => prev.map(p => p.id === id ? { ...p, status: 'Verified' } : p));
+                setSelectedPost(prev => prev?.id === id ? { ...prev, status: 'Verified' } : prev);
             } else if (action === 'reject') {
                 await updateItemStatus(id, 'Rejected');
                 setPosts(prev => prev.map(p => p.id === id ? { ...p, status: 'Rejected' } : p));
+                setSelectedPost(prev => prev?.id === id ? { ...prev, status: 'Rejected' } : prev);
             }
         } catch (e) {
             console.error(e);
+            showFeedback('Something went wrong. Please try again.');
+        } finally {
+            setSubmitting(false);
         }
         closeConfirm();
-    }, [confirm, closeConfirm]);
+        if (action !== 'submit') setSelectedPost(null);
+    }, [confirm, closeConfirm, form, imageFile, resetForm, showFeedback]);
+
+    const API_BASE = 'http://localhost:8000';
+
+    const detailFields = [
+        { label: 'Type', key: 'type', render: (val) => <StatusBadge status={val} /> },
+        { label: 'Item Name', key: 'item_name' },
+        { label: 'Reported By', key: 'reporter' },
+        { label: 'Location', key: 'location' },
+        { label: 'Date', key: 'date' },
+        { label: 'Description', key: 'description' },
+        { label: 'Contact Info', key: 'contact_info' },
+        { label: 'Status', key: 'status', render: (val) => <StatusBadge status={val} /> },
+        {
+            label: 'Photo', key: 'image_url', render: (val) => val
+                ? <img src={val.startsWith('http') ? val : `${API_BASE}${val}`} alt="Item" style={{ width: '100%', borderRadius: '8px', marginTop: '4px' }} />
+                : <span style={{ color: '#94A3B8' }}>No photo</span>
+        },
+    ];
 
     return (
         <main className="page-container">
@@ -85,43 +163,69 @@ function PostVerification() {
 
             {/* Add Post Form */}
             <section className="form-card">
-                <h2>Add New Post</h2>
+                <h2>Submit New Post</h2>
                 {feedback && <div className={`form-feedback ${feedback.includes('success') ? 'success' : 'error'}`}>{feedback}</div>}
                 <form onSubmit={handleSubmit} className="page-form">
-                    <div className="form-row">
-                        <div className="form-group">
-                            <label htmlFor="pv-type">Type *</label>
-                            <select id="pv-type" name="type" value={form.type} onChange={handleChange}>
-                                <option value="Lost">Lost</option>
-                                <option value="Found">Found</option>
-                            </select>
+
+                    {/* Type selector */}
+                    <div className="form-group">
+                        <label>Report Type</label>
+                        <div className="type-toggle">
+                            {['Lost', 'Found'].map(t => (
+                                <button
+                                    key={t}
+                                    type="button"
+                                    className={`type-btn ${t.toLowerCase()} ${form.type === t ? 'active' : ''}`}
+                                    onClick={() => setForm(prev => ({ ...prev, type: t }))}
+                                >
+                                    {t === 'Lost' ? '🔍' : '✅'} {t}
+                                </button>
+                            ))}
                         </div>
+                    </div>
+
+                    <div className="form-row">
                         <div className="form-group">
                             <label htmlFor="pv-item">Item Name *</label>
-                            <input id="pv-item" type="text" name="item" value={form.item} onChange={handleChange} placeholder="e.g. iPhone 13" />
+                            <input id="pv-item" type="text" name="item_name" value={form.item_name} onChange={handleChange} placeholder="e.g. Blue Backpack" />
                         </div>
-                    </div>
-                    <div className="form-row">
                         <div className="form-group">
                             <label htmlFor="pv-location">Location *</label>
-                            <input id="pv-location" type="text" name="location" value={form.location} onChange={handleChange} placeholder="e.g. Library 2F" />
-                        </div>
-                        <div className="form-group">
-                            <label htmlFor="pv-reporter">Reported By *</label>
-                            <input id="pv-reporter" type="text" name="reporter" value={form.reporter} onChange={handleChange} placeholder="e.g. Juan Dela Cruz" />
+                            <input id="pv-location" type="text" name="location" value={form.location} onChange={handleChange} placeholder="e.g. Library 2nd Floor" />
                         </div>
                     </div>
+
+                    <div className="form-group">
+                        <label htmlFor="pv-desc">Description</label>
+                        <textarea id="pv-desc" name="description" value={form.description} onChange={handleChange} placeholder="Describe the item in detail..." rows="3" />
+                    </div>
+
                     <div className="form-row">
                         <div className="form-group">
-                            <label htmlFor="pv-date">Date *</label>
-                            <input id="pv-date" type="date" name="date" value={form.date} onChange={handleChange} />
+                            <label htmlFor="pv-contact">Contact Info</label>
+                            <input id="pv-contact" type="text" name="contact_info" value={form.contact_info} onChange={handleChange} placeholder="Phone or email" />
                         </div>
                         <div className="form-group">
-                            <label htmlFor="pv-desc">Description</label>
-                            <input id="pv-desc" type="text" name="description" value={form.description} onChange={handleChange} placeholder="Brief description..." />
+                            <label>Item Photo</label>
+                            {imagePreview ? (
+                                <div className="image-preview-wrap">
+                                    <img src={imagePreview} alt="Preview" className="image-preview" />
+                                    <button type="button" className="btn-remove-image" onClick={handleRemoveImage}>✕ Remove</button>
+                                </div>
+                            ) : (
+                                <div className="image-upload-area" onClick={() => fileInputRef.current?.click()}>
+                                    <span>📷 Click to upload photo</span>
+                                </div>
+                            )}
+                            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageChange} style={{ display: 'none' }} />
                         </div>
                     </div>
-                    <button type="submit" className="btn-primary">Submit Post</button>
+
+                    <div className="form-actions">
+                        <button type="submit" className="btn-primary" disabled={submitting}>
+                            {submitting ? 'Submitting…' : 'Submit Post'}
+                        </button>
+                    </div>
                 </form>
             </section>
 
@@ -142,35 +246,22 @@ function PostVerification() {
                         <thead>
                             <tr>
                                 <th>Type</th>
-                                <th>Item</th>
+                                <th>Item Name</th>
                                 <th>Reporter</th>
                                 <th>Location</th>
                                 <th>Date</th>
-                                <th>Description</th>
                                 <th>Status</th>
-                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {filtered.map(p => (
-                                <tr key={p.id}>
+                                <tr key={p.id} className="clickable-row" onClick={() => setSelectedPost(p)}>
                                     <td><StatusBadge status={p.type} /></td>
-                                    <td>{p.item}</td>
+                                    <td>{p.item_name}</td>
                                     <td>{p.reporter}</td>
                                     <td>{p.location}</td>
                                     <td className="date-cell">{p.date}</td>
-                                    <td>{p.description}</td>
                                     <td><StatusBadge status={p.status} /></td>
-                                    <td>
-                                        {p.status === 'Pending' ? (
-                                            <>
-                                                <button className="btn-approve" onClick={() => openConfirm(p.id, 'verify')}>Verify</button>
-                                                <button className="btn-reject" onClick={() => openConfirm(p.id, 'reject')}>Reject</button>
-                                            </>
-                                        ) : (
-                                            <span className="action-done">—</span>
-                                        )}
-                                    </td>
                                 </tr>
                             ))}
                         </tbody>
@@ -187,6 +278,22 @@ function PostVerification() {
                 variant={confirmProps.variant}
                 onConfirm={handleConfirm}
                 onCancel={closeConfirm}
+            />
+
+            <DetailPanel
+                isOpen={!!selectedPost}
+                onClose={() => setSelectedPost(null)}
+                title="Post Details"
+                data={selectedPost || {}}
+                fields={detailFields}
+                actions={
+                    selectedPost?.status?.includes('Pending') ? (
+                        <>
+                            <button className="btn-danger" onClick={() => openConfirm(selectedPost.id, 'reject')}>Reject</button>
+                            <button className="btn-primary" onClick={() => openConfirm(selectedPost.id, 'verify')}>Verify</button>
+                        </>
+                    ) : null
+                }
             />
         </main>
     );

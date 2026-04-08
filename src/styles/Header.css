@@ -19,6 +19,7 @@
 }
 
 .sidebar-toggle-btn {
+    display: none;
     background: none;
     border: none;
     color: white;
@@ -229,6 +230,10 @@
 
     .header-container {
         padding: 0 1rem;
+    }
+
+    .sidebar-toggle-btn {
+        display: block;
     }
 
     .app-tagline {

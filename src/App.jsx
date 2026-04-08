@@ -21,7 +21,6 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return localStorage.getItem('sf_auth') === 'true';
   });
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= MOBILE_BREAKPOINT);
 
@@ -36,11 +35,7 @@ function App() {
   }, []);
 
   const handleToggleSidebar = useCallback(() => {
-    if (isMobile) {
-      setMobileOpen(prev => !prev);
-    } else {
-      setSidebarCollapsed(prev => !prev);
-    }
+    if (isMobile) setMobileOpen(prev => !prev);
   }, [isMobile]);
 
   const handleCloseMobile = useCallback(() => {
@@ -72,7 +67,6 @@ function App() {
       <Header onToggleSidebar={handleToggleSidebar} onLogout={handleLogout} />
       <div className="app-body">
         <Sidebar
-          isCollapsed={sidebarCollapsed}
           isMobileOpen={mobileOpen}
           onCloseMobile={handleCloseMobile}
         />

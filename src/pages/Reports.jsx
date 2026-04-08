@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import StatusBadge from '../components/StatusBadge';
 import { fetchItems } from '../services/api';
+import DetailPanel from '../components/DetailPanel';
 import '../styles/Pages.css';
 
 function Reports() {
@@ -23,6 +24,7 @@ function Reports() {
         dateTo: '',
     });
     const [generated, setGenerated] = useState(false);
+    const [selectedReport, setSelectedReport] = useState(null);
 
     const handleFilterChange = useCallback((e) => {
         const { name, value } = e.target;
@@ -60,6 +62,23 @@ function Reports() {
         approved: filteredReports.filter(r => r.status === 'Approved').length,
         claimed: filteredReports.filter(r => r.status === 'Claimed').length,
     }), [filteredReports]);
+
+    const detailFields = [
+        { label: 'Type', key: 'type', render: (val) => <StatusBadge status={val} /> },
+        { label: 'Item Name', key: 'item_name' },
+        { label: 'Location', key: 'location' },
+        { label: 'Reported By', key: 'reporter' },
+        { label: 'Date', key: 'date' },
+        { label: 'Contact Info', key: 'contact_info' },
+        { label: 'Status', key: 'status', render: (val) => <StatusBadge status={val} /> },
+        { 
+            label: 'Photo', 
+            key: 'image_url', 
+            render: (val) => val 
+                ? <img src={val.startsWith('http') ? val : `http://localhost:8000${val}`} alt="Item" style={{ width: '100%', borderRadius: '8px', marginTop: '8px' }} /> 
+                : <span style={{ color: '#94A3B8' }}>No photo available</span>
+        },
+    ];
 
     return (
         <main className="page-container">
@@ -147,7 +166,7 @@ function Reports() {
                                 <thead>
                                     <tr>
                                         <th>Type</th>
-                                        <th>Item</th>
+                                        <th>Item Name</th>
                                         <th>Location</th>
                                         <th>Reporter</th>
                                         <th>Date</th>
@@ -156,9 +175,9 @@ function Reports() {
                                 </thead>
                                 <tbody>
                                     {filteredReports.map(r => (
-                                        <tr key={r.id}>
+                                        <tr key={r.id} className="clickable-row" onClick={() => setSelectedReport(r)}>
                                             <td><StatusBadge status={r.type} /></td>
-                                            <td>{r.item}</td>
+                                            <td>{r.item_name}</td>
                                             <td>{r.location}</td>
                                             <td>{r.reporter}</td>
                                             <td className="date-cell">{r.date}</td>
@@ -170,6 +189,17 @@ function Reports() {
                             {filteredReports.length === 0 && <p className="empty-state">No reports match your filters.</p>}
                         </div>
                     </section>
+
+                    <DetailPanel
+                        isOpen={!!selectedReport}
+                        onClose={() => setSelectedReport(null)}
+                        title="Report Record Details"
+                        data={selectedReport || {}}
+                        fields={detailFields}
+                        actions={
+                            <button className="btn-secondary" onClick={() => window.print()}>Print Record</button>
+                        }
+                    />
                 </>
             )}
         </main>

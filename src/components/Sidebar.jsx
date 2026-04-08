@@ -1,10 +1,9 @@
 import { NavLink } from 'react-router-dom';
 import '../styles/Sidebar.css';
 
-function Sidebar({ isCollapsed, isMobileOpen, onCloseMobile }) {
+function Sidebar({ isMobileOpen, onCloseMobile }) {
     const classes = [
         'sidebar',
-        isCollapsed ? 'collapsed' : '',
         isMobileOpen ? 'mobile-open' : '',
     ].filter(Boolean).join(' ');
 
@@ -13,35 +12,31 @@ function Sidebar({ isCollapsed, isMobileOpen, onCloseMobile }) {
 
     return (
         <aside className={classes}>
-            {(!isCollapsed || isMobileOpen) && (
-                <>
-                    <div className="sidebar-header">
-                        <h2>Admin Panel</h2>
-                    </div>
-                    <nav className="sidebar-nav">
-                        <NavLink to="/" className={linkClass} onClick={onCloseMobile} end>
-                            <span className="sidebar-icon">📊</span>
-                            Dashboard Overview
-                        </NavLink>
-                        <NavLink to="/verification" className={linkClass} onClick={onCloseMobile}>
-                            <span className="sidebar-icon">✅</span>
-                            Post Verification
-                        </NavLink>
-                        <NavLink to="/claims" className={linkClass} onClick={onCloseMobile}>
-                            <span className="sidebar-icon">📋</span>
-                            Claim Validation
-                        </NavLink>
-                        <NavLink to="/users" className={linkClass} onClick={onCloseMobile}>
-                            <span className="sidebar-icon">👥</span>
-                            User Management
-                        </NavLink>
-                        <NavLink to="/reports" className={linkClass} onClick={onCloseMobile}>
-                            <span className="sidebar-icon">📈</span>
-                            Generate Reports
-                        </NavLink>
-                    </nav>
-                </>
-            )}
+            <div className="sidebar-header">
+                <h2>Admin</h2>
+            </div>
+            <nav className="sidebar-nav">
+                <NavLink to="/" className={linkClass} onClick={onCloseMobile} end>
+                    <span className="sidebar-icon">📊</span>
+                    <span className="sidebar-text">Dashboard Overview</span>
+                </NavLink>
+                <NavLink to="/verification" className={linkClass} onClick={onCloseMobile}>
+                    <span className="sidebar-icon">✅</span>
+                    <span className="sidebar-text">Post Verification</span>
+                </NavLink>
+                <NavLink to="/claims" className={linkClass} onClick={onCloseMobile}>
+                    <span className="sidebar-icon">📋</span>
+                    <span className="sidebar-text">Claim Validation</span>
+                </NavLink>
+                <NavLink to="/users" className={linkClass} onClick={onCloseMobile}>
+                    <span className="sidebar-icon">👥</span>
+                    <span className="sidebar-text">User Management</span>
+                </NavLink>
+                <NavLink to="/reports" className={linkClass} onClick={onCloseMobile}>
+                    <span className="sidebar-icon">📈</span>
+                    <span className="sidebar-text">Generate Reports</span>
+                </NavLink>
+            </nav>
         </aside>
     );
 }
