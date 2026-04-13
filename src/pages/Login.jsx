@@ -4,7 +4,7 @@ import '../styles/Login.css';
 import { loginApi } from '../services/api';
 
 function Login({ onLogin }) {
-    const [form, setForm] = useState({ email: '', password: '' });
+    const [form, setForm] = useState({ identifier: '', password: '' });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -16,23 +16,24 @@ function Login({ onLogin }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!form.email || !form.password) {
-            setError('Please enter both email and password.');
+        if (!form.identifier || !form.password) {
+            setError('Please enter both identifier (username/email) and password.');
             return;
         }
 
         setLoading(true);
 
         try {
-            const data = await loginApi(form.email, form.password);
+            const data = await loginApi(form.identifier, form.password);
             onLogin({ 
                 name: data.username, 
-                email: form.email, 
-                role: 'Administrator',
-                token: data.token 
+                email: data.email, 
+                role: data.is_staff ? 'Administrator' : 'User',
+                token: data.token,
+                is_staff: data.is_staff
             });
         } catch (err) {
-            setError('Invalid email or password.');
+            setError('Invalid username/email or password.');
             setLoading(false);
         }
     };
@@ -61,17 +62,17 @@ function Login({ onLogin }) {
 
                     <form onSubmit={handleSubmit} className="login-form">
                         <div className="login-field">
-                            <label htmlFor="login-email">Email Address</label>
+                            <label htmlFor="login-identifier">Username or Email</label>
                             <div className="input-wrapper">
-                                <span className="input-icon">📧</span>
+                                <span className="input-icon">👤</span>
                                 <input
-                                    id="login-email"
-                                    type="email"
-                                    name="email"
-                                    value={form.email}
+                                    id="login-identifier"
+                                    type="text"
+                                    name="identifier"
+                                    value={form.identifier}
                                     onChange={handleChange}
-                                    placeholder="admin@ustp.edu"
-                                    autoComplete="email"
+                                    placeholder="Username or admin@ustp.edu"
+                                    autoComplete="username"
                                     disabled={loading}
                                 />
                             </div>

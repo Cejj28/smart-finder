@@ -14,11 +14,11 @@ const getAuthHeadersMultipart = () => {
     return token ? { 'Authorization': `Token ${token}` } : {};
 };
 
-export const loginApi = async (email, password) => {
+export const loginApi = async (identifier, password) => {
     const response = await fetch(`${API_URL}/login/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: email, password }) // Using email as username
+        body: JSON.stringify({ username: identifier, password })
     });
     
     if (!response.ok) {
@@ -33,6 +33,9 @@ export const fetchItems = async () => {
     });
     if (!response.ok) throw new Error('Failed to fetch items');
     const data = await response.json();
+    
+    const BASE_SERVER_URL = API_URL.replace('/api', '');
+
     return data.map(item => ({
         id: item.id,
         type: item.type,
@@ -43,7 +46,10 @@ export const fetchItems = async () => {
         date: new Date(item.created_at).toLocaleDateString(),
         description: item.description,
         contact_info: item.contact_info,
-        image_url: item.image || null,
+        // Ensure image_url is absolute
+        image_url: (item.image && typeof item.image === 'string') 
+            ? (item.image.startsWith('http') ? item.image : `${BASE_SERVER_URL}${item.image}`)
+            : null,
         status: item.status || 'Pending Review'
     }));
 };

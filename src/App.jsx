@@ -21,6 +21,9 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return localStorage.getItem('sf_auth') === 'true';
   });
+  const [isAdmin, setIsAdmin] = useState(() => {
+    return localStorage.getItem('sf_role') === 'admin';
+  });
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= MOBILE_BREAKPOINT);
 
@@ -47,13 +50,22 @@ function App() {
     if (user.token) {
         localStorage.setItem('sf_token', user.token);
     }
+    if (user.is_staff) {
+        localStorage.setItem('sf_role', 'admin');
+        setIsAdmin(true);
+    } else {
+        localStorage.setItem('sf_role', 'user');
+        setIsAdmin(false);
+    }
     setIsAuthenticated(true);
   }, []);
 
   const handleLogout = useCallback(() => {
     localStorage.removeItem('sf_auth');
     localStorage.removeItem('sf_token');
+    localStorage.removeItem('sf_role');
     setIsAuthenticated(false);
+    setIsAdmin(false);
   }, []);
 
   // Show login page if not authenticated
@@ -79,7 +91,7 @@ function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/verification" element={<PostVerification />} />
               <Route path="/claims" element={<ClaimValidation />} />
-              <Route path="/users" element={<UserManagement />} />
+              {isAdmin && <Route path="/users" element={<UserManagement />} />}
               <Route path="/reports" element={<Reports />} />
               <Route path="/profile" element={<Profile />} />
             </Routes>

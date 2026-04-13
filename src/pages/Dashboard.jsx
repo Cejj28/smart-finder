@@ -85,7 +85,7 @@ function Dashboard() {
             label: 'Photo', 
             key: 'image_url', 
             render: (val) => val 
-                ? <img src={val.startsWith('http') ? val : `http://localhost:8000${val}`} alt="Item" style={{ width: '100%', borderRadius: '8px', marginTop: '8px' }} /> 
+                ? <img src={val} alt="Item" style={{ width: '100%', borderRadius: '8px', marginTop: '8px' }} /> 
                 : <span style={{ color: '#94A3B8' }}>No photo available</span>
         },
     ];
