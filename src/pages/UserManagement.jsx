@@ -1,38 +1,50 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import ConfirmModal from '../components/ConfirmModal';
 import DetailPanel from '../components/DetailPanel';
 import useConfirmModal from '../hooks/useConfirmModal';
 import useSearch from '../hooks/useSearch';
 import useFormHandler from '../hooks/useFormHandler';
-import { usersData as initialUsers } from '../data/mockData';
+import { fetchUsers, createUser, updateUser, deleteUser } from '../services/api';
 import '../styles/Pages.css';
 
 const EMPTY_FORM = { name: '', email: '', role: 'Student', status: 'Active' };
 const SEARCH_FIELDS = ['name', 'email', 'role'];
 
 function UserManagement() {
-    const [users, setUsers] = useState(initialUsers);
+    const [users, setUsers] = useState([]);
     const [editingId, setEditingId] = useState(null);
+    const [loading, setLoading] = useState(true);
     const { form, setForm, feedback, handleChange, resetForm, showFeedback, setFeedback } = useFormHandler(EMPTY_FORM);
     const { searchTerm, setSearchTerm, filtered } = useSearch(users, SEARCH_FIELDS);
     const [selectedUser, setSelectedUser] = useState(null);
+
+    const loadUsers = useCallback(async () => {
+        setLoading(true);
+        try {
+            const data = await fetchUsers();
+            setUsers(data);
+        } catch (err) {
+            showFeedback('Failed to load users from server.', 0);
+        } finally {
+            setLoading(false);
+        }
+    }, [showFeedback]);
+
+    useEffect(() => {
+        loadUsers();
+    }, [loadUsers]);
 
     // Dynamic confirm props because toggle action depends on current user status
     const getConfirmAction = useCallback((action, id) => {
         switch (action) {
             case 'delete':
                 return { title: 'Delete User', message: 'Are you sure you want to delete this user? This action cannot be undone.', confirmLabel: 'Delete', variant: 'danger' };
-            case 'toggle': {
-                const user = users.find(u => u.id === id);
-                const newStatus = user?.status === 'Active' ? 'Inactive' : 'Active';
-                return { title: 'Change User Status', message: `Are you sure you want to set this user to ${newStatus}?`, confirmLabel: `Set ${newStatus}`, variant: 'warning' };
-            }
             case 'submit':
                 return { title: editingId ? 'Update User' : 'Add User', message: `Are you sure you want to ${editingId ? 'update' : 'add'} this user?`, confirmLabel: editingId ? 'Update' : 'Add', variant: 'primary' };
             default:
                 return {};
         }
-    }, [users, editingId]);
+    }, [editingId]);
 
     const { confirm, openConfirm, closeConfirm, confirmProps } = useConfirmModal(getConfirmAction);
 
@@ -51,35 +63,32 @@ function UserManagement() {
         setFeedback('');
     }, [setForm, setFeedback]);
 
-    const handleConfirm = useCallback(() => {
+    const handleConfirm = useCallback(async () => {
         const { id, action } = confirm;
-        if (action === 'submit') {
-            if (editingId) {
-                setUsers(prev => prev.map(u => u.id === editingId ? { ...u, ...form } : u));
-                setEditingId(null);
-                showFeedback('User updated successfully!');
-            } else {
-                const newUser = { id: Date.now(), ...form };
-                setUsers(prev => [newUser, ...prev]);
-                showFeedback('User added successfully!');
-            }
-            resetForm();
-        } else if (action === 'delete') {
-            setUsers(prev => prev.filter(u => u.id !== id));
-            if (editingId === id) {
+        try {
+            if (action === 'submit') {
+                if (editingId) {
+                    await updateUser(editingId, form);
+                    showFeedback('User updated successfully!');
+                } else {
+                    await createUser(form);
+                    showFeedback('User added successfully!');
+                }
+                loadUsers();
                 setEditingId(null);
                 resetForm();
+            } else if (action === 'delete') {
+                await deleteUser(id);
+                showFeedback('User deleted successfully!');
+                loadUsers();
             }
-        } else if (action === 'toggle') {
-            setUsers(prev => prev.map(u =>
-                u.id === id ? { ...u, status: u.status === 'Active' ? 'Inactive' : 'Active' } : u
-            ));
-            // Update selected user if currently open
-            setSelectedUser(prev => prev && prev.id === id ? { ...prev, status: prev.status === 'Active' ? 'Inactive' : 'Active' } : prev);
+        } catch (err) {
+            showFeedback('Server error: ' + err.message, 0);
+        } finally {
+            closeConfirm();
+            if (action === 'delete') setSelectedUser(null);
         }
-        closeConfirm();
-        if (action === 'delete') setSelectedUser(null);
-    }, [confirm, editingId, closeConfirm, resetForm, form, showFeedback]);
+    }, [confirm, editingId, loadUsers, closeConfirm, resetForm, form, showFeedback]);
 
     const detailFields = [
         { label: 'Full Name', key: 'name' },

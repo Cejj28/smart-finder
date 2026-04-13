@@ -75,3 +75,57 @@ export const createItem = async ({ type, item_name, location, description, conta
     if (!response.ok) throw new Error('Failed to create item');
     return await response.json();
 };
+export const fetchUsers = async () => {
+    const response = await fetch(`${API_URL}/users/`, {
+        headers: getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch users');
+    const data = await response.json();
+    return data.map(user => ({
+        id: user.id,
+        name: user.username,
+        email: user.email,
+        role: user.is_staff ? 'Admin' : 'Student', 
+        status: user.is_active ? 'Active' : 'Inactive'
+    }));
+};
+
+export const createUser = async (userData) => {
+    const response = await fetch(`${API_URL}/users/`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+            username: userData.name,
+            email: userData.email,
+            password: 'password123', // Default or random
+            is_staff: userData.role === 'Admin',
+            is_active: userData.status === 'Active'
+        })
+    });
+    if (!response.ok) throw new Error('Failed to create user');
+    return await response.json();
+};
+
+export const updateUser = async (id, userData) => {
+    const response = await fetch(`${API_URL}/users/${id}/`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+            username: userData.name,
+            email: userData.email,
+            is_staff: userData.role === 'Admin',
+            is_active: userData.status === 'Active'
+        })
+    });
+    if (!response.ok) throw new Error('Failed to update user');
+    return await response.json();
+};
+
+export const deleteUser = async (id) => {
+    const response = await fetch(`${API_URL}/users/${id}/`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to delete user');
+    return true;
+};
