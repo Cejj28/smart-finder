@@ -25,9 +25,9 @@ function Login({ onLogin }) {
 
         try {
             const data = await loginApi(form.identifier, form.password);
-            onLogin({ 
-                name: data.username, 
-                email: data.email, 
+            onLogin({
+                name: data.username,
+                email: data.email,
                 role: data.is_staff ? 'Administrator' : 'User',
                 token: data.token,
                 is_staff: data.is_staff
@@ -71,7 +71,7 @@ function Login({ onLogin }) {
                                     name="identifier"
                                     value={form.identifier}
                                     onChange={handleChange}
-                                    placeholder="Username or admin@ustp.edu"
+                                    placeholder="Enter username or email"
                                     autoComplete="username"
                                     disabled={loading}
                                 />

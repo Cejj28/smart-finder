@@ -1,4 +1,12 @@
-const API_URL = 'http://localhost:8000/api';
+// ─────────────────────────────────────────────────────────────────────────────
+// Django DRF — Primary backend (auth, CRUD, user management)
+// ─────────────────────────────────────────────────────────────────────────────
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FastAPI Analytics — Secondary service (read-only stats)
+// ─────────────────────────────────────────────────────────────────────────────
+const FASTAPI_URL = import.meta.env.VITE_FASTAPI_URL || 'http://localhost:8001';
 
 const getAuthHeaders = () => {
     const token = localStorage.getItem('sf_token');
@@ -14,6 +22,8 @@ const getAuthHeadersMultipart = () => {
     return token ? { 'Authorization': `Token ${token}` } : {};
 };
 
+// ─── DJANGO: Auth ─────────────────────────────────────────────────────────────
+
 export const loginApi = async (identifier, password) => {
     const response = await fetch(`${API_URL}/login/`, {
         method: 'POST',
@@ -26,6 +36,8 @@ export const loginApi = async (identifier, password) => {
     }
     return await response.json();
 };
+
+// ─── DJANGO: Items ────────────────────────────────────────────────────────────
 
 export const fetchItems = async () => {
     const response = await fetch(`${API_URL}/items/`, {
@@ -81,6 +93,9 @@ export const createItem = async ({ type, item_name, location, description, conta
     if (!response.ok) throw new Error('Failed to create item');
     return await response.json();
 };
+
+// ─── DJANGO: Users ────────────────────────────────────────────────────────────
+
 export const fetchUsers = async () => {
     const response = await fetch(`${API_URL}/users/`, {
         headers: getAuthHeaders(),
@@ -134,4 +149,62 @@ export const deleteUser = async (id) => {
     });
     if (!response.ok) throw new Error('Failed to delete user');
     return true;
+};
+
+// ─── FASTAPI: Analytics ───────────────────────────────────────────────────────
+// All analytics calls use the same Django token (FastAPI verifies it against
+// the shared authtoken_token table).
+
+/** High-level summary: totals, lost/found split, status counts. */
+export const fetchAnalyticsOverview = async () => {
+    const response = await fetch(`${FASTAPI_URL}/stats/overview`, {
+        headers: getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch analytics overview');
+    return await response.json();
+};
+
+/** Count per type: [{type: "Lost", count: 5}, {type: "Found", count: 3}] */
+export const fetchAnalyticsByType = async () => {
+    const response = await fetch(`${FASTAPI_URL}/stats/by-type`, {
+        headers: getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch type stats');
+    return await response.json();
+};
+
+/** Count per status: [{status: "Pending Review", count: 4}, ...] */
+export const fetchAnalyticsByStatus = async () => {
+    const response = await fetch(`${FASTAPI_URL}/stats/by-status`, {
+        headers: getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch status stats');
+    return await response.json();
+};
+
+/** Top 10 locations by report count: [{location: "Library", count: 7}, ...] */
+export const fetchAnalyticsByLocation = async () => {
+    const response = await fetch(`${FASTAPI_URL}/stats/by-location`, {
+        headers: getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch location stats');
+    return await response.json();
+};
+
+/** Daily trend for last 30 days: [{date: "2025-04-01", count: 2}, ...] */
+export const fetchAnalyticsTrends = async () => {
+    const response = await fetch(`${FASTAPI_URL}/stats/trends`, {
+        headers: getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch trend stats');
+    return await response.json();
+};
+
+/** 5 most recent items: lightweight activity feed. */
+export const fetchAnalyticsRecent = async () => {
+    const response = await fetch(`${FASTAPI_URL}/stats/recent`, {
+        headers: getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch recent items');
+    return await response.json();
 };
