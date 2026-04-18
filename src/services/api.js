@@ -58,9 +58,11 @@ export const fetchItems = async () => {
         date: new Date(item.created_at).toLocaleDateString(),
         description: item.description,
         contact_info: item.contact_info,
-        // Ensure image_url is absolute
+        // Ensure image_url is absolute (handle /media/, http://, or //res.cloudinary URLs)
         image_url: (item.image && typeof item.image === 'string') 
-            ? (item.image.startsWith('http') ? item.image : `${BASE_SERVER_URL}${item.image}`)
+            ? (item.image.startsWith('http') ? item.image 
+               : (item.image.startsWith('//') ? `https:${item.image}` 
+               : `${BASE_SERVER_URL}${item.image}`))
             : null,
         status: item.status || 'Pending Review'
     }));
