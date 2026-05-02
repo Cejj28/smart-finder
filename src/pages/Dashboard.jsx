@@ -41,7 +41,11 @@ function Dashboard() {
         loadItems();
     }, []);
     const { confirm, openConfirm, closeConfirm, confirmProps } = useConfirmModal(CONFIRM_ACTIONS);
-    const { searchTerm, setSearchTerm, filtered: filteredItems } = useSearch(items, SEARCH_FIELDS);
+    
+    // Only show Pending Review items in the main dashboard table
+    const pendingItems = useMemo(() => items.filter(i => i.status === 'Pending Review'), [items]);
+    const { searchTerm, setSearchTerm, filtered: filteredItems } = useSearch(pendingItems, SEARCH_FIELDS);
+    
     const [selectedItem, setSelectedItem] = useState(null);
 
     // Memoize stats so they only recompute when items change

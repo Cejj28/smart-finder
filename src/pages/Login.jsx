@@ -25,6 +25,14 @@ function Login({ onLogin }) {
 
         try {
             const data = await loginApi(form.identifier, form.password);
+            
+            // Block non-staff from the web admin portal
+            if (!data.is_staff) {
+                setError('Access Denied. Only staff members can access the Admin Portal.');
+                setLoading(false);
+                return;
+            }
+
             onLogin({
                 name: data.username,
                 email: data.email,

@@ -20,9 +20,9 @@ function Sidebar({ isMobileOpen, onCloseMobile }) {
                     <span className="sidebar-icon">📊</span>
                     <span className="sidebar-text">Dashboard Overview</span>
                 </NavLink>
-                <NavLink to="/verification" className={linkClass} onClick={onCloseMobile}>
-                    <span className="sidebar-icon">✅</span>
-                    <span className="sidebar-text">Post Verification</span>
+                <NavLink to="/items" className={linkClass} onClick={onCloseMobile}>
+                    <span className="sidebar-icon">📦</span>
+                    <span className="sidebar-text">Item Management</span>
                 </NavLink>
                 <NavLink to="/claims" className={linkClass} onClick={onCloseMobile}>
                     <span className="sidebar-icon">📋</span>

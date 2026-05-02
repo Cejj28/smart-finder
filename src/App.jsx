@@ -9,7 +9,7 @@ import Login from './pages/Login'
 
 // Lazy-loaded route pages — each page loads only when navigated to
 const Dashboard = lazy(() => import('./pages/Dashboard'));
-const PostVerification = lazy(() => import('./pages/PostVerification'));
+const ItemManagement = lazy(() => import('./pages/ItemManagement'));
 const ClaimValidation = lazy(() => import('./pages/ClaimValidation'));
 const UserManagement = lazy(() => import('./pages/UserManagement'));
 const Reports = lazy(() => import('./pages/Reports'));
@@ -89,7 +89,7 @@ function App() {
           <Suspense fallback={<div className="page-container" style={{ textAlign: 'center', padding: '3rem' }}>Loading…</div>}>
             <Routes>
               <Route path="/" element={<Dashboard />} />
-              <Route path="/verification" element={<PostVerification />} />
+              <Route path="/items" element={<ItemManagement />} />
               <Route path="/claims" element={<ClaimValidation />} />
               {isAdmin && <Route path="/users" element={<UserManagement />} />}
               <Route path="/reports" element={<Reports />} />
