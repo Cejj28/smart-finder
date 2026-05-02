@@ -91,6 +91,8 @@ function UserManagement() {
                 }
                 loadUsers();
                 setEditingId(null);
+                setConfirmPassword('');
+                setShowPassword(false);
                 resetForm();
             } else if (action === 'delete') {
                 await deleteUser(id);
