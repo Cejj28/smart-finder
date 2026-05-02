@@ -98,6 +98,14 @@ export const createItem = async ({ type, item_name, location, description, conta
     return await response.json();
 };
 
+export const fetchMatches = async (id) => {
+    const response = await fetch(`${API_URL}/items/${id}/matches/`, {
+        headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to fetch matches');
+    return await response.json();
+};
+
 // ─── DJANGO: Users ────────────────────────────────────────────────────────────
 
 export const fetchUsers = async () => {

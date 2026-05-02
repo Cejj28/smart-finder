@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { predictCategory } from '../services/api';
+import { fetchMatches, predictCategory } from '../services/api';
 import '../styles/DetailPanel.css';
 
 const DetailPanel = ({ isOpen, onClose, title, data, fields, actions }) => {
@@ -15,11 +15,10 @@ const DetailPanel = ({ isOpen, onClose, title, data, fields, actions }) => {
             // Prevent body scroll when panel is open
             document.body.style.overflow = 'hidden';
             
-            // Only trigger AI Prediction if category is missing
+            // 1. Fetch AI Prediction if category is missing
             if (!data?.category && data?.item_name) {
-                const fetchPrediction = async () => {
+                const getAIAnalysis = async () => {
                     setIsPredicting(true);
-                    setPrediction(null);
                     try {
                         const result = await predictCategory(data.item_name, data.description || '');
                         setPrediction(result);
@@ -29,29 +28,24 @@ const DetailPanel = ({ isOpen, onClose, title, data, fields, actions }) => {
                         setIsPredicting(false);
                     }
                 };
-                fetchPrediction();
+                getAIAnalysis();
             }
 
-            // Fetch Matches if item has a category
-            if ((data?.category || prediction?.category) && data?.id) {
-                const fetchMatches = async () => {
+            // 2. Fetch Smart Matches (Always try to fetch if we have an ID)
+            if (data?.id) {
+                const getMatches = async () => {
                     setLoadingMatches(true);
+                    setMatches([]); // Reset matches for new item
                     try {
-                        // We need an endpoint for matches in the web api too!
-                        const response = await fetch(`${window.location.origin.replace('3000', '8000')}/api/items/${data.id}/matches/`, {
-                            headers: { 'Authorization': `Token ${localStorage.getItem('sf_token')}` }
-                        });
-                        if (response.ok) {
-                            const result = await response.json();
-                            setMatches(result);
-                        }
+                        const result = await fetchMatches(data.id);
+                        setMatches(result);
                     } catch (e) {
                         console.error('Failed to fetch matches', e);
                     } finally {
                         setLoadingMatches(false);
                     }
                 };
-                fetchMatches();
+                getMatches();
             }
         } else {
             document.body.style.overflow = 'auto';
