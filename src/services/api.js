@@ -106,11 +106,11 @@ export const fetchUsers = async () => {
     });
     if (!response.ok) throw new Error('Failed to fetch users');
     const data = await response.json();
+    // Map is_staff to a readable role for the frontend
     return data.map(user => ({
-        id: user.id,
-        name: user.username,
-        email: user.email,
-        role: user.is_staff ? 'Admin' : 'Student', 
+        ...user,
+        name: user.username, // Fallback if full_name is missing
+        role: user.is_staff ? 'Admin' : 'Student',
         status: user.is_active ? 'Active' : 'Inactive'
     }));
 };
