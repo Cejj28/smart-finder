@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { fetchMatches, predictCategory } from '../services/api';
 import '../styles/DetailPanel.css';
 
-const DetailPanel = ({ isOpen, onClose, title, data, fields, actions }) => {
+const DetailPanel = ({ isOpen, onClose, title, data, fields, actions, onMatchClick }) => {
     const [isClosing, setIsClosing] = useState(false);
     const [prediction, setPrediction] = useState(null);
     const [isPredicting, setIsPredicting] = useState(false);
@@ -50,6 +50,7 @@ const DetailPanel = ({ isOpen, onClose, title, data, fields, actions }) => {
         } else {
             document.body.style.overflow = 'auto';
             setPrediction(null);
+            setMatches([]);
         }
         return () => {
             document.body.style.overflow = 'auto';
@@ -134,18 +135,31 @@ const DetailPanel = ({ isOpen, onClose, title, data, fields, actions }) => {
                                         </h5>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                             {matches.map(match => (
-                                                <div key={match.id} style={{ 
-                                                    background: 'white', 
-                                                    padding: '8px', 
-                                                    borderRadius: '8px', 
-                                                    fontSize: '0.8rem',
-                                                    border: '1px solid #E2E8F0',
-                                                    display: 'flex',
-                                                    justifyContent: 'space-between',
-                                                    alignItems: 'center'
-                                                }}>
-                                                    <span>{match.item_name} at {match.location}</span>
-                                                    <span style={{ color: 'var(--primary-color)', fontWeight: '600' }}>View</span>
+                                                <div 
+                                                    key={match.id} 
+                                                    onClick={() => onMatchClick && onMatchClick(match)}
+                                                    style={{ 
+                                                        background: 'white', 
+                                                        padding: '8px 12px', 
+                                                        borderRadius: '8px', 
+                                                        fontSize: '0.8rem',
+                                                        border: '1px solid #E2E8F0',
+                                                        display: 'flex',
+                                                        justifyContent: 'space-between',
+                                                        alignItems: 'center',
+                                                        cursor: 'pointer',
+                                                        transition: 'all 0.2s'
+                                                    }}
+                                                    onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--primary-color)'}
+                                                    onMouseLeave={(e) => e.currentTarget.style.borderColor = '#E2E8F0'}
+                                                >
+                                                    <span style={{ color: '#475569' }}>{match.item_name} at {match.location}</span>
+                                                    <span style={{ 
+                                                        color: 'var(--primary-color)', 
+                                                        fontWeight: '700',
+                                                        fontSize: '0.75rem',
+                                                        textTransform: 'uppercase'
+                                                    }}>View Details</span>
                                                 </div>
                                             ))}
                                         </div>

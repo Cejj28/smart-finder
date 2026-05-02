@@ -680,6 +680,7 @@ function ItemManagement() {
                 onClose={() => setSelectedPost(null)}
                 title="Item Details"
                 data={selectedPost || {}}
+                onMatchClick={(match) => setSelectedPost(match)}
                 fields={detailFields.filter(f => {
                     const val = (selectedPost || {})[f.key];
                     if (f.key === 'category' && !val) return false;
