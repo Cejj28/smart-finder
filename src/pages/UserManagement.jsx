@@ -7,7 +7,7 @@ import useFormHandler from '../hooks/useFormHandler';
 import { fetchUsers, createUser, updateUser, deleteUser } from '../services/api';
 import '../styles/Pages.css';
 
-const EMPTY_FORM = { name: '', username: '', email: '', role: 'Student', status: 'Active' };
+const EMPTY_FORM = { name: '', username: '', email: '', password: '', role: 'Student', status: 'Active' };
 const SEARCH_FIELDS = ['name', 'email', 'role'];
 
 function UserManagement() {
@@ -61,7 +61,8 @@ function UserManagement() {
 
     const handleEdit = useCallback((user) => {
         setEditingId(user.id);
-        setForm({ name: user.name, username: user.username, email: user.email, role: user.role, status: user.status });
+        // Password is not fetched for security, keep it empty in edit mode
+        setForm({ name: user.name, username: user.username, email: user.email, password: '', role: user.role, status: user.status });
         setFeedback('');
     }, [setForm, setFeedback]);
 
@@ -201,6 +202,23 @@ function UserManagement() {
                                 value={form.email} 
                                 onChange={handleChange} 
                                 placeholder="e.g. juan@university.edu" 
+                                style={{
+                                    width: '100%', padding: '12px 16px', borderRadius: '12px', border: '2px solid #e2e8f0',
+                                    marginTop: '6px', fontSize: '1rem', outline: 'none', transition: 'all 0.2s'
+                                }}
+                                onFocus={(e) => e.target.style.borderColor = 'var(--primary-color)'}
+                                onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label style={{ fontWeight: '700', color: '#475569', fontSize: '0.85rem' }}>Password {editingId ? '(Leave blank to keep current)' : '*'}</label>
+                            <input 
+                                type="password" 
+                                name="password" 
+                                value={form.password} 
+                                onChange={handleChange} 
+                                placeholder="••••••••" 
                                 style={{
                                     width: '100%', padding: '12px 16px', borderRadius: '12px', border: '2px solid #e2e8f0',
                                     marginTop: '6px', fontSize: '1rem', outline: 'none', transition: 'all 0.2s'

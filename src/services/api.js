@@ -125,7 +125,7 @@ export const createUser = async (userData) => {
         body: JSON.stringify({
             username: sanitizedUsername,
             email: userData.email,
-            password: 'password123',
+            password: userData.password || 'password123',
             is_staff: userData.role === 'Admin',
             is_active: userData.status === 'Active'
         })
@@ -137,15 +137,22 @@ export const createUser = async (userData) => {
 export const updateUser = async (id, userData) => {
     const sanitizedUsername = (userData.username || '').toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
     
+    const payload = {
+        username: sanitizedUsername,
+        email: userData.email,
+        is_staff: userData.role === 'Admin',
+        is_active: userData.status === 'Active'
+    };
+
+    // Only update password if a new one was provided
+    if (userData.password) {
+        payload.password = userData.password;
+    }
+
     const response = await fetch(`${API_URL}/users/${id}/`, {
         method: 'PATCH',
         headers: getAuthHeaders(),
-        body: JSON.stringify({
-            username: sanitizedUsername,
-            email: userData.email,
-            is_staff: userData.role === 'Admin',
-            is_active: userData.status === 'Active'
-        })
+        body: JSON.stringify(payload)
     });
     if (!response.ok) throw new Error('Failed to update user');
     return await response.json();
