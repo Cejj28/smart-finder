@@ -116,11 +116,14 @@ export const fetchUsers = async () => {
 };
 
 export const createUser = async (userData) => {
+    // Django usernames cannot contain spaces. Replace spaces with underscores.
+    const sanitizedUsername = userData.name.toLowerCase().replace(/\s+/g, '_');
+    
     const response = await fetch(`${API_URL}/users/`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({
-            username: userData.name,
+            username: sanitizedUsername,
             email: userData.email,
             password: 'password123', // Default or random
             is_staff: userData.role === 'Admin',
@@ -132,11 +135,13 @@ export const createUser = async (userData) => {
 };
 
 export const updateUser = async (id, userData) => {
+    const sanitizedUsername = (userData.name || '').toLowerCase().replace(/\s+/g, '_');
+    
     const response = await fetch(`${API_URL}/users/${id}/`, {
         method: 'PATCH',
         headers: getAuthHeaders(),
         body: JSON.stringify({
-            username: userData.name,
+            username: sanitizedUsername,
             email: userData.email,
             is_staff: userData.role === 'Admin',
             is_active: userData.status === 'Active'
