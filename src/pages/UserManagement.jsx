@@ -7,7 +7,7 @@ import useFormHandler from '../hooks/useFormHandler';
 import { fetchUsers, createUser, updateUser, deleteUser } from '../services/api';
 import '../styles/Pages.css';
 
-const EMPTY_FORM = { name: '', email: '', role: 'Student', status: 'Active' };
+const EMPTY_FORM = { name: '', username: '', email: '', role: 'Student', status: 'Active' };
 const SEARCH_FIELDS = ['name', 'email', 'role'];
 
 function UserManagement() {
@@ -61,7 +61,7 @@ function UserManagement() {
 
     const handleEdit = useCallback((user) => {
         setEditingId(user.id);
-        setForm({ name: user.name, email: user.email, role: user.role, status: user.status });
+        setForm({ name: user.name, username: user.username, email: user.email, role: user.role, status: user.status });
         setFeedback('');
     }, [setForm, setFeedback]);
 
@@ -99,6 +99,7 @@ function UserManagement() {
 
     const detailFields = [
         { label: 'Full Name', key: 'name' },
+        { label: 'Username', key: 'username' },
         { label: 'Email Address', key: 'email' },
         { label: 'Role', key: 'role', render: (val) => <span className="role-badge">{val}</span> },
         { label: 'Status', key: 'status', render: (val, u) => (
@@ -157,8 +158,32 @@ function UserManagement() {
                                 type="text" 
                                 name="name" 
                                 value={form.name} 
-                                onChange={handleChange} 
+                                onChange={(e) => {
+                                    handleChange(e);
+                                    // Auto-generate username as they type the name
+                                    if (!editingId) {
+                                        const autoUser = e.target.value.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+                                        setForm(prev => ({ ...prev, username: autoUser }));
+                                    }
+                                }} 
                                 placeholder="e.g. Juan Dela Cruz" 
+                                style={{
+                                    width: '100%', padding: '12px 16px', borderRadius: '12px', border: '2px solid #e2e8f0',
+                                    marginTop: '6px', fontSize: '1rem', outline: 'none', transition: 'all 0.2s'
+                                }}
+                                onFocus={(e) => e.target.style.borderColor = 'var(--primary-color)'}
+                                onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label style={{ fontWeight: '700', color: '#475569', fontSize: '0.85rem' }}>Username *</label>
+                            <input 
+                                type="text" 
+                                name="username" 
+                                value={form.username} 
+                                onChange={handleChange} 
+                                placeholder="e.g. juan_dela_cruz" 
                                 style={{
                                     width: '100%', padding: '12px 16px', borderRadius: '12px', border: '2px solid #e2e8f0',
                                     marginTop: '6px', fontSize: '1rem', outline: 'none', transition: 'all 0.2s'
@@ -287,7 +312,8 @@ function UserManagement() {
                                     >
                                         <td style={{ padding: '1.25rem 1.5rem' }}>
                                             <div style={{ fontWeight: '700', color: '#1e293b' }}>{u.name}</div>
-                                            <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{u.email}</div>
+                                            <div style={{ fontSize: '0.85rem', color: '#64748b' }}>@{u.username}</div>
+                                            <div style={{ fontSize: '0.85rem', color: '#94a3b8' }}>{u.email}</div>
                                         </td>
                                         <td style={{ padding: '1.25rem 1.5rem' }}>
                                             <span style={{ 
