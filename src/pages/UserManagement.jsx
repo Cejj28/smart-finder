@@ -82,18 +82,21 @@ function UserManagement() {
         const { id, action } = confirm;
         try {
             if (action === 'submit') {
+                // Reset UI immediately to feel faster
+                const currentForm = { ...form };
+                resetForm();
+                setConfirmPassword('');
+                setShowPassword(false);
+
                 if (editingId) {
-                    await updateUser(editingId, form);
+                    await updateUser(editingId, currentForm);
                     showFeedback('User updated successfully!');
                 } else {
-                    await createUser(form);
+                    await createUser(currentForm);
                     showFeedback('User added successfully!');
                 }
                 loadUsers();
                 setEditingId(null);
-                setConfirmPassword('');
-                setShowPassword(false);
-                resetForm();
             } else if (action === 'delete') {
                 await deleteUser(id);
                 showFeedback('User deleted successfully!');
