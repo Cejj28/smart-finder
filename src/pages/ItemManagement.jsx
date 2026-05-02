@@ -182,7 +182,15 @@ function ItemManagement() {
     const detailFields = [
         { label: 'Type', key: 'type', render: (val) => <StatusBadge status={val} /> },
         { label: 'Item Name', key: 'item_name' },
-        { label: 'Category', key: 'category', render: (val) => val || '—' },
+        { 
+            label: 'AI Category', 
+            key: 'category', 
+            render: (val) => val ? (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    🤖 <span style={{ background: '#f1f5f9', padding: '2px 8px', borderRadius: '10px', fontWeight: '600', border: '1px solid #e2e8f0' }}>{val}</span>
+                </span>
+            ) : null 
+        },
         { label: 'Reported By', key: 'reporter' },
         { label: 'Location', key: 'location' },
         { label: 'Date', key: 'date' },
@@ -672,7 +680,11 @@ function ItemManagement() {
                 onClose={() => setSelectedPost(null)}
                 title="Item Details"
                 data={selectedPost || {}}
-                fields={detailFields}
+                fields={detailFields.filter(f => {
+                    const val = (selectedPost || {})[f.key];
+                    if (f.key === 'category' && !val) return false;
+                    return true;
+                })}
                 actions={
                     selectedPost?.status === 'Pending Review' ? (
                         <>
