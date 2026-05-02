@@ -4,7 +4,7 @@ import ConfirmModal from '../components/ConfirmModal';
 import DetailPanel from '../components/DetailPanel';
 import useConfirmModal from '../hooks/useConfirmModal';
 import useSearch from '../hooks/useSearch';
-import { fetchItems, updateItemStatus, createItem } from '../services/api';
+import { fetchItems, updateItemStatus, createItem, predictCategory } from '../services/api';
 import '../styles/Pages.css';
 
 const EMPTY_FORM = { type: 'Lost', item_name: '', location: '', description: '', contact_info: '' };
@@ -38,7 +38,10 @@ function PostVerification() {
     const [imagePreview, setImagePreview] = useState(null);
     const [feedback, setFeedback] = useState('');
     const [submitting, setSubmitting] = useState(false);
+    const [prediction, setPrediction] = useState(null);
+    const [isPredicting, setIsPredicting] = useState(false);
     const fileInputRef = useRef(null);
+    const predictionTimer = useRef(null);
 
     useEffect(() => {
         const load = async () => {
@@ -58,7 +61,33 @@ function PostVerification() {
 
     const handleChange = useCallback((e) => {
         const { name, value } = e.target;
-        setForm(prev => ({ ...prev, [name]: value }));
+        setForm(prev => {
+            const nextForm = { ...prev, [name]: value };
+            
+            // Trigger ML prediction when name or description changes
+            if (name === 'item_name' || name === 'description') {
+                if (predictionTimer.current) clearTimeout(predictionTimer.current);
+                
+                if (!nextForm.item_name.trim()) {
+                    setPrediction(null);
+                    return nextForm;
+                }
+                
+                setIsPredicting(true);
+                predictionTimer.current = setTimeout(async () => {
+                    try {
+                        const result = await predictCategory(nextForm.item_name, nextForm.description);
+                        setPrediction(result);
+                    } catch (e) {
+                        console.error('Prediction failed:', e);
+                    } finally {
+                        setIsPredicting(false);
+                    }
+                }, 800); // 800ms debounce
+            }
+            
+            return nextForm;
+        });
     }, []);
 
     const handleImageChange = useCallback((e) => {
@@ -83,6 +112,7 @@ function PostVerification() {
         setForm(EMPTY_FORM);
         setImageFile(null);
         setImagePreview(null);
+        setPrediction(null);
         if (fileInputRef.current) fileInputRef.current.value = '';
     }, []);
 
@@ -198,6 +228,45 @@ function PostVerification() {
                     <div className="form-group">
                         <label htmlFor="pv-desc">Description</label>
                         <textarea id="pv-desc" name="description" value={form.description} onChange={handleChange} placeholder="Describe the item in detail..." rows="3" />
+                        
+                        {/* AI Category Prediction Badge */}
+                        {(prediction || isPredicting) && (
+                            <div className="ai-prediction-badge" style={{
+                                marginTop: '10px',
+                                padding: '10px 14px',
+                                background: 'var(--card-bg)',
+                                border: '1px solid var(--border-color)',
+                                borderRadius: '8px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '10px',
+                                fontSize: '0.9rem',
+                                color: 'var(--text-secondary)',
+                                transition: 'all 0.3s ease'
+                            }}>
+                                <span style={{ fontSize: '1.2rem' }}>🤖</span>
+                                {isPredicting ? (
+                                    <span style={{ fontStyle: 'italic' }}>AI is analyzing...</span>
+                                ) : (
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+                                        <span>AI Suggests:</span>
+                                        <span style={{
+                                            background: 'var(--primary-color)',
+                                            color: 'white',
+                                            padding: '4px 10px',
+                                            borderRadius: '20px',
+                                            fontWeight: '600',
+                                            fontSize: '0.85rem'
+                                        }}>
+                                            {prediction.category}
+                                        </span>
+                                        <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>
+                                            ({Math.round(prediction.confidence * 100)}% Match)
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     <div className="form-row">

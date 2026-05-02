@@ -40,7 +40,7 @@ export const loginApi = async (identifier, password) => {
 // ─── DJANGO: Items ────────────────────────────────────────────────────────────
 
 export const fetchItems = async () => {
-    const response = await fetch(`${API_URL}/items/`, {
+    const response = await fetch(`${API_URL}/items/?admin=true`, {
         headers: getAuthHeaders(),
     });
     if (!response.ok) throw new Error('Failed to fetch items');
@@ -208,5 +208,16 @@ export const fetchAnalyticsRecent = async () => {
         headers: getAuthHeaders(),
     });
     if (!response.ok) throw new Error('Failed to fetch recent items');
+    return await response.json();
+};
+
+/** ML Category Predictor */
+export const predictCategory = async (item_name, description = '') => {
+    const response = await fetch(`${FASTAPI_URL}/predict/category`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ item_name, description })
+    });
+    if (!response.ok) throw new Error('Failed to predict category');
     return await response.json();
 };
