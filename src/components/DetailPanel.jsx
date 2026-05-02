@@ -6,6 +6,8 @@ const DetailPanel = ({ isOpen, onClose, title, data, fields, actions }) => {
     const [isClosing, setIsClosing] = useState(false);
     const [prediction, setPrediction] = useState(null);
     const [isPredicting, setIsPredicting] = useState(false);
+    const [matches, setMatches] = useState([]);
+    const [loadingMatches, setLoadingMatches] = useState(false);
 
     useEffect(() => {
         if (isOpen) {
@@ -13,8 +15,8 @@ const DetailPanel = ({ isOpen, onClose, title, data, fields, actions }) => {
             // Prevent body scroll when panel is open
             document.body.style.overflow = 'hidden';
             
-            // Trigger AI Prediction when panel opens
-            if (data?.item_name) {
+            // Only trigger AI Prediction if category is missing
+            if (!data?.category && data?.item_name) {
                 const fetchPrediction = async () => {
                     setIsPredicting(true);
                     setPrediction(null);
@@ -28,6 +30,28 @@ const DetailPanel = ({ isOpen, onClose, title, data, fields, actions }) => {
                     }
                 };
                 fetchPrediction();
+            }
+
+            // Fetch Matches if item has a category
+            if ((data?.category || prediction?.category) && data?.id) {
+                const fetchMatches = async () => {
+                    setLoadingMatches(true);
+                    try {
+                        // We need an endpoint for matches in the web api too!
+                        const response = await fetch(`${window.location.origin.replace('3000', '8000')}/api/items/${data.id}/matches/`, {
+                            headers: { 'Authorization': `Token ${localStorage.getItem('sf_token')}` }
+                        });
+                        if (response.ok) {
+                            const result = await response.json();
+                            setMatches(result);
+                        }
+                    } catch (e) {
+                        console.error('Failed to fetch matches', e);
+                    } finally {
+                        setLoadingMatches(false);
+                    }
+                };
+                fetchMatches();
             }
         } else {
             document.body.style.overflow = 'auto';
@@ -67,7 +91,7 @@ const DetailPanel = ({ isOpen, onClose, title, data, fields, actions }) => {
                 <div className="panel-content">
                     
                     {/* AI Analysis Section */}
-                    {(prediction || isPredicting) && (
+                    {(data?.category || prediction || isPredicting) && (
                         <div className="ai-analysis-card" style={{
                             background: 'rgba(99, 102, 241, 0.05)',
                             border: '1px solid rgba(99, 102, 241, 0.2)',
@@ -79,14 +103,18 @@ const DetailPanel = ({ isOpen, onClose, title, data, fields, actions }) => {
                             alignItems: 'flex-start'
                         }}>
                             <span style={{ fontSize: '1.5rem', lineHeight: 1 }}>🤖</span>
-                            <div>
-                                <h4 style={{ margin: '0 0 6px 0', color: 'var(--primary-color)', fontSize: '0.95rem' }}>AI Category Analysis</h4>
+                            <div style={{ flex: 1 }}>
+                                <h4 style={{ margin: '0 0 6px 0', color: 'var(--primary-color)', fontSize: '0.95rem' }}>
+                                    {data?.category ? 'Item Category (AI Verified)' : 'AI Category Analysis'}
+                                </h4>
                                 {isPredicting ? (
                                     <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Analyzing item...</p>
                                 ) : (
                                     <>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                                            <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>Suggested:</span>
+                                            <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>
+                                                {data?.category ? 'Category:' : 'Suggested:'}
+                                            </span>
                                             <span style={{
                                                 background: 'var(--primary-color)',
                                                 color: 'white',
@@ -94,24 +122,40 @@ const DetailPanel = ({ isOpen, onClose, title, data, fields, actions }) => {
                                                 borderRadius: '12px',
                                                 fontSize: '0.85rem',
                                                 fontWeight: '600'
-                                            }}>{prediction.category}</span>
-                                            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                                                ({Math.round(prediction.confidence * 100)}% match)
-                                            </span>
+                                            }}>{data?.category || prediction?.category}</span>
+                                            {prediction && (
+                                                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                                                    ({Math.round(prediction.confidence * 100)}% confidence)
+                                                </span>
+                                            )}
                                         </div>
-                                        {/* Show top alternative if confidence < 90% */}
-                                        {prediction.confidence < 0.9 && (
-                                            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                                                Alternative: {
-                                                    Object.entries(prediction.all_scores)
-                                                        .filter(([cat]) => cat !== prediction.category)
-                                                        .sort(([, a], [, b]) => b - a)[0][0]
-                                                } ({Math.round(Object.entries(prediction.all_scores)
-                                                        .filter(([cat]) => cat !== prediction.category)
-                                                        .sort(([, a], [, b]) => b - a)[0][1] * 100)}%)
-                                            </div>
-                                        )}
                                     </>
+                                )}
+                                
+                                {/* Smart Matches UI */}
+                                {matches.length > 0 && (
+                                    <div style={{ marginTop: '12px', borderTop: '1px dashed rgba(99, 102, 241, 0.3)', paddingTop: '12px' }}>
+                                        <h5 style={{ margin: '0 0 8px 0', color: 'var(--success-color)', fontSize: '0.85rem' }}>
+                                            ✨ Smart Matches Found ({matches.length})
+                                        </h5>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            {matches.map(match => (
+                                                <div key={match.id} style={{ 
+                                                    background: 'white', 
+                                                    padding: '8px', 
+                                                    borderRadius: '8px', 
+                                                    fontSize: '0.8rem',
+                                                    border: '1px solid #E2E8F0',
+                                                    display: 'flex',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'center'
+                                                }}>
+                                                    <span>{match.item_name} at {match.location}</span>
+                                                    <span style={{ color: 'var(--primary-color)', fontWeight: '600' }}>View</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
                                 )}
                             </div>
                         </div>

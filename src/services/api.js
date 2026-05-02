@@ -58,6 +58,7 @@ export const fetchItems = async () => {
         date: new Date(item.created_at).toLocaleDateString(),
         description: item.description,
         contact_info: item.contact_info,
+        category: item.category,
         // Ensure image_url is absolute (handle /media/, http://, or //res.cloudinary URLs)
         image_url: (item.image && typeof item.image === 'string') 
             ? (item.image.startsWith('http') ? item.image 
@@ -78,13 +79,14 @@ export const updateItemStatus = async (id, status) => {
     return await response.json();
 };
 
-export const createItem = async ({ type, item_name, location, description, contact_info, imageFile }) => {
+export const createItem = async ({ type, item_name, location, description, contact_info, category, imageFile }) => {
     const formData = new FormData();
     formData.append('type', type);
     formData.append('item_name', item_name);
     formData.append('location', location);
     if (description) formData.append('description', description);
     if (contact_info) formData.append('contact_info', contact_info);
+    if (category) formData.append('category', category);
     if (imageFile) formData.append('image', imageFile);
 
     const response = await fetch(`${API_URL}/items/`, {

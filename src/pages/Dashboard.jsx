@@ -76,6 +76,7 @@ function Dashboard() {
     const detailFields = [
         { label: 'Type', key: 'type', render: (val) => <StatusBadge status={val} /> },
         { label: 'Item Name', key: 'item_name' },
+        { label: 'Category', key: 'category', render: (val) => val || '—' },
         { label: 'Submitted By', key: 'submittedBy' },
         { label: 'Location', key: 'location' },
         { label: 'Date', key: 'date' },

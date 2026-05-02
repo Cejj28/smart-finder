@@ -130,7 +130,7 @@ function PostVerification() {
         try {
             if (action === 'submit') {
                 setSubmitting(true);
-                const created = await createItem({ ...form, imageFile });
+                const created = await createItem({ ...form, category: prediction?.category || '', imageFile });
                 // Map returned item to match local shape
                 const newPost = {
                     id: created.id,
