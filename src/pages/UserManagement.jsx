@@ -14,6 +14,8 @@ function UserManagement() {
     const [users, setUsers] = useState([]);
     const [editingId, setEditingId] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [showPassword, setShowPassword] = useState(false);
+    const [confirmPassword, setConfirmPassword] = useState('');
     const { form, setForm, feedback, handleChange, resetForm, showFeedback, setFeedback } = useFormHandler(EMPTY_FORM);
     const { searchTerm, setSearchTerm, filtered } = useSearch(users, SEARCH_FIELDS);
     const [selectedUser, setSelectedUser] = useState(null);
@@ -56,8 +58,18 @@ function UserManagement() {
             showFeedback('Name and email are required.', 0);
             return;
         }
+        // Password validation for new users
+        if (!editingId && !form.password) {
+            showFeedback('Password is required for new users.', 0);
+            return;
+        }
+        // Password match check
+        if (form.password && form.password !== confirmPassword) {
+            showFeedback('Passwords do not match!', 0);
+            return;
+        }
         openConfirm(null, 'submit');
-    }, [form, openConfirm, showFeedback]);
+    }, [form, confirmPassword, editingId, openConfirm, showFeedback]);
 
     const handleEdit = useCallback((user) => {
         setEditingId(user.id);
@@ -110,6 +122,7 @@ function UserManagement() {
 
     const handleCancel = useCallback(() => {
         setEditingId(null);
+        setConfirmPassword('');
         resetForm();
     }, [resetForm]);
 
@@ -212,20 +225,56 @@ function UserManagement() {
                         </div>
 
                         <div className="form-group">
-                            <label style={{ fontWeight: '700', color: '#475569', fontSize: '0.85rem' }}>Password {editingId ? '(Leave blank to keep current)' : '*'}</label>
+                            <label style={{ fontWeight: '700', color: '#475569', fontSize: '0.85rem' }}>
+                                Password {editingId ? '(Leave blank to keep current)' : '*'}
+                            </label>
+                            <div style={{ position: 'relative' }}>
+                                <input 
+                                    type={showPassword ? "text" : "password"} 
+                                    name="password" 
+                                    value={form.password} 
+                                    onChange={handleChange} 
+                                    placeholder="••••••••" 
+                                    style={{
+                                        width: '100%', padding: '12px 16px', borderRadius: '12px', border: '2px solid #e2e8f0',
+                                        marginTop: '6px', fontSize: '1rem', outline: 'none', transition: 'all 0.2s',
+                                        paddingRight: '45px'
+                                    }}
+                                    onFocus={(e) => e.target.style.borderColor = 'var(--primary-color)'}
+                                    onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+                                />
+                                <button 
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    style={{
+                                        position: 'absolute', right: '12px', top: '55%', transform: 'translateY(-50%)',
+                                        background: 'none', border: 'none', cursor: 'pointer', color: '#64748b',
+                                        fontSize: '1.2rem'
+                                    }}
+                                >
+                                    {showPassword ? '👁️' : '👁️‍🗨️'}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="form-group">
+                            <label style={{ fontWeight: '700', color: '#475569', fontSize: '0.85rem' }}>Retype Password *</label>
                             <input 
-                                type="password" 
-                                name="password" 
-                                value={form.password} 
-                                onChange={handleChange} 
+                                type={showPassword ? "text" : "password"} 
+                                value={confirmPassword} 
+                                onChange={(e) => setConfirmPassword(e.target.value)} 
                                 placeholder="••••••••" 
                                 style={{
                                     width: '100%', padding: '12px 16px', borderRadius: '12px', border: '2px solid #e2e8f0',
-                                    marginTop: '6px', fontSize: '1rem', outline: 'none', transition: 'all 0.2s'
+                                    marginTop: '6px', fontSize: '1rem', outline: 'none', transition: 'all 0.2s',
+                                    borderColor: confirmPassword && form.password !== confirmPassword ? '#ef4444' : '#e2e8f0'
                                 }}
-                                onFocus={(e) => e.target.style.borderColor = 'var(--primary-color)'}
-                                onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
                             />
+                            {confirmPassword && form.password !== confirmPassword && (
+                                <span style={{ fontSize: '0.75rem', color: '#ef4444', marginTop: '4px', display: 'block' }}>
+                                    Passwords do not match
+                                </span>
+                            )}
                         </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
