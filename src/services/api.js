@@ -250,6 +250,39 @@ export const markAllNotificationsRead = async () => {
     return await response.json();
 };
 
+// ─── DJANGO: Profile ──────────────────────────────────────────────────────────
+
+export const fetchProfile = async () => {
+    const response = await fetch(`${API_URL}/profile/me/`, {
+        headers: getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch profile');
+    return await response.json();
+};
+
+export const updateProfile = async (data) => {
+    const response = await fetch(`${API_URL}/profile/me/`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Failed to update profile');
+    return await response.json();
+};
+
+export const changePassword = async (data) => {
+    const response = await fetch(`${API_URL}/profile/change-password/`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(JSON.stringify(errorData) || 'Failed to change password');
+    }
+    return await response.json();
+};
+
 // ─── FASTAPI: Analytics ───────────────────────────────────────────────────────
 // All analytics calls use the same Django token (FastAPI verifies it against
 // the shared authtoken_token table).
