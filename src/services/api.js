@@ -106,6 +106,40 @@ export const fetchMatches = async (id) => {
     return await response.json();
 };
 
+// ─── DJANGO: Claims ───────────────────────────────────────────────────────────
+
+export const fetchClaims = async () => {
+    const response = await fetch(`${API_URL}/claims/`, {
+        headers: getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch claims');
+    return await response.json();
+};
+
+export const createClaim = async (claimData) => {
+    const response = await fetch(`${API_URL}/claims/`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(claimData),
+    });
+    if (!response.ok) throw new Error('Failed to create claim');
+    return await response.json();
+};
+
+export const updateClaimStatus = async (id, status) => {
+    const payload = { status };
+    if (status === 'Released') {
+        payload.release_date = new Date().toISOString().split('T')[0];
+    }
+    const response = await fetch(`${API_URL}/claims/${id}/`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload),
+    });
+    if (!response.ok) throw new Error('Failed to update claim status');
+    return await response.json();
+};
+
 // ─── DJANGO: Users ────────────────────────────────────────────────────────────
 
 export const fetchUsers = async () => {

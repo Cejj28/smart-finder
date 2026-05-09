@@ -1,11 +1,11 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import StatusBadge from '../components/StatusBadge';
 import ConfirmModal from '../components/ConfirmModal';
 import DetailPanel from '../components/DetailPanel';
 import useConfirmModal from '../hooks/useConfirmModal';
 import useSearch from '../hooks/useSearch';
 import useFormHandler from '../hooks/useFormHandler';
-import { claimsData as initialClaims } from '../data/mockData';
+import { fetchClaims, createClaim, updateClaimStatus, fetchItems } from '../services/api';
 import '../styles/Pages.css';
 
 const EMPTY_FORM = { claimant: '', item: '', proof: '', contact: '', date: '' };
@@ -39,11 +39,28 @@ const CONFIRM_ACTIONS = {
 };
 
 function ClaimValidation() {
-    const [claims, setClaims] = useState(initialClaims);
+    const [claims, setClaims] = useState([]);
+    const [foundItems, setFoundItems] = useState([]);
     const { form, feedback, handleChange, resetForm, showFeedback } = useFormHandler(EMPTY_FORM);
     const { confirm, openConfirm, closeConfirm, confirmProps } = useConfirmModal(CONFIRM_ACTIONS);
     const { searchTerm, setSearchTerm, filtered } = useSearch(claims, SEARCH_FIELDS);
     const [selectedClaim, setSelectedClaim] = useState(null);
+
+    const loadData = useCallback(async () => {
+        try {
+            const claimsData = await fetchClaims();
+            setClaims(claimsData);
+            const itemsData = await fetchItems();
+            // Only keep "Found" items for the dropdown
+            setFoundItems(itemsData.filter(i => i.type === 'Found'));
+        } catch (err) {
+            console.error('Failed to load claims', err);
+        }
+    }, []);
+
+    useEffect(() => {
+        loadData();
+    }, [loadData]);
 
     // Memoize mini-stat counts so they only recompute when claims change
     const miniStats = useMemo(() => ({
@@ -62,43 +79,45 @@ function ClaimValidation() {
         openConfirm(null, 'submit');
     }, [form, openConfirm, showFeedback]);
 
-    const handleConfirm = useCallback(() => {
+    const handleConfirm = useCallback(async () => {
         const { id, action } = confirm;
-        if (action === 'submit') {
-            const newClaim = {
-                id: Date.now(),
-                ...form,
-                status: 'Pending',
-                releaseDate: '',
-            };
-            setClaims(prev => [newClaim, ...prev]);
-            resetForm();
-            showFeedback('Claim logged successfully!');
-        } else if (action === 'approve') {
-            setClaims(prev => prev.map(c =>
-                c.id === id ? { ...c, status: 'Approved', releaseDate: new Date().toISOString().split('T')[0] } : c
-            ));
-        } else if (action === 'reject') {
-            setClaims(prev => prev.map(c =>
-                c.id === id ? { ...c, status: 'Rejected' } : c
-            ));
-        } else if (action === 'release') {
-            setClaims(prev => prev.map(c =>
-                c.id === id ? { ...c, status: 'Released' } : c
-            ));
+        try {
+            if (action === 'submit') {
+                await createClaim({
+                    claimant_name: form.claimant,
+                    item: form.item, // ID of the item
+                    proof: form.proof,
+                    contact_info: form.contact,
+                });
+                showFeedback('Claim logged successfully!');
+                resetForm();
+            } else {
+                let newStatus = '';
+                if (action === 'approve') newStatus = 'Approved';
+                else if (action === 'reject') newStatus = 'Rejected';
+                else if (action === 'release') newStatus = 'Released';
+                
+                await updateClaimStatus(id, newStatus);
+            }
+            // Refresh data from server
+            loadData();
+        } catch (err) {
+            showFeedback('Action failed. Please try again.', 0);
+            console.error(err);
+        } finally {
+            closeConfirm();
+            setSelectedClaim(null);
         }
-        closeConfirm();
-        setSelectedClaim(null);
-    }, [confirm, closeConfirm, form, resetForm, showFeedback]);
+    }, [confirm, closeConfirm, form, resetForm, showFeedback, loadData]);
 
     const detailFields = [
-        { label: 'Claimant Option', key: 'claimant' },
-        { label: 'Item', key: 'item' },
+        { label: 'Claimant Name', key: 'claimant_name', render: (val, c) => val || c.claimant_username || 'Admin' },
+        { label: 'Item', key: 'item_name' },
         { label: 'Proof of Ownership', key: 'proof' },
-        { label: 'Contact', key: 'contact' },
-        { label: 'Claim Date', key: 'date' },
+        { label: 'Contact', key: 'contact_info' },
+        { label: 'Claim Date', key: 'created_at', render: (val) => new Date(val).toLocaleDateString() },
         { label: 'Status', key: 'status', render: (val) => <StatusBadge status={val} /> },
-        { label: 'Release Date', key: 'releaseDate', render: (val) => val || '—' },
+        { label: 'Release Date', key: 'release_date', render: (val) => val ? new Date(val).toLocaleDateString() : '—' },
     ];
 
     return (
@@ -140,7 +159,12 @@ function ClaimValidation() {
                         </div>
                         <div className="form-group">
                             <label htmlFor="cv-item">Item Being Claimed *</label>
-                            <input id="cv-item" type="text" name="item" value={form.item} onChange={handleChange} placeholder="e.g. Black Wallet" />
+                            <select id="cv-item" name="item" value={form.item} onChange={handleChange}>
+                                <option value="">Select a Found Item</option>
+                                {foundItems.map(item => (
+                                    <option key={item.id} value={item.id}>{item.item_name} ({item.location})</option>
+                                ))}
+                            </select>
                         </div>
                     </div>
                     <div className="form-row">
@@ -191,13 +215,13 @@ function ClaimValidation() {
                         <tbody>
                             {filtered.map(c => (
                                 <tr key={c.id} className="clickable-row" onClick={() => setSelectedClaim(c)}>
-                                    <td>{c.claimant}</td>
-                                    <td>{c.item}</td>
+                                    <td>{c.claimant_name || c.claimant_username || 'Admin'}</td>
+                                    <td>{c.item_name}</td>
                                     <td>{c.proof}</td>
-                                    <td>{c.contact}</td>
-                                    <td className="date-cell">{c.date}</td>
+                                    <td>{c.contact_info}</td>
+                                    <td className="date-cell">{new Date(c.created_at).toLocaleDateString()}</td>
                                     <td><StatusBadge status={c.status} /></td>
-                                    <td className="date-cell">{c.releaseDate || '—'}</td>
+                                    <td className="date-cell">{c.release_date ? new Date(c.release_date).toLocaleDateString() : '—'}</td>
                                 </tr>
                             ))}
                         </tbody>
