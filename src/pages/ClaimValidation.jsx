@@ -9,7 +9,7 @@ import { fetchClaims, createClaim, updateClaimStatus, fetchItems } from '../serv
 import '../styles/Pages.css';
 
 const EMPTY_FORM = { claimant: '', item: '', proof: '', contact: '', date: '' };
-const SEARCH_FIELDS = ['claimant', 'item'];
+const SEARCH_FIELDS = ['claimant_name', 'claimant_username', 'item_name'];
 
 const CONFIRM_ACTIONS = {
     approve: {

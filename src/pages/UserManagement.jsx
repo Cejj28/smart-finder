@@ -8,7 +8,7 @@ import { fetchUsers, createUser, updateUser, deleteUser } from '../services/api'
 import '../styles/Pages.css';
 
 const EMPTY_FORM = { name: '', username: '', email: '', password: '', role: 'Student', status: 'Active' };
-const SEARCH_FIELDS = ['name', 'email', 'role'];
+const SEARCH_FIELDS = ['name', 'username', 'email', 'role'];
 
 function UserManagement() {
     const [users, setUsers] = useState([]);
