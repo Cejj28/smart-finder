@@ -45,6 +45,7 @@ function ClaimValidation() {
     const { confirm, openConfirm, closeConfirm, confirmProps } = useConfirmModal(CONFIRM_ACTIONS);
     const { searchTerm, setSearchTerm, filtered } = useSearch(claims, SEARCH_FIELDS);
     const [selectedClaim, setSelectedClaim] = useState(null);
+    const [itemSearch, setItemSearch] = useState('');
 
     const loadData = useCallback(async () => {
         try {
@@ -158,11 +159,33 @@ function ClaimValidation() {
                             <input id="cv-claimant" type="text" name="claimant" value={form.claimant} onChange={handleChange} placeholder="Full name" />
                         </div>
                         <div className="form-group">
-                            <label htmlFor="cv-item">Item Being Claimed *</label>
-                            <select id="cv-item" name="item" value={form.item} onChange={handleChange}>
-                                <option value="">Select a Found Item</option>
-                                {foundItems.map(item => (
-                                    <option key={item.id} value={item.id}>{item.item_name} ({item.location})</option>
+                            <label htmlFor="cv-item">Search & Select Found Item *</label>
+                            <input 
+                                type="text" 
+                                placeholder="Search by item name or location..." 
+                                value={itemSearch}
+                                onChange={(e) => setItemSearch(e.target.value)}
+                                style={{ marginBottom: '8px', padding: '10px', borderRadius: '8px', border: '1px solid var(--border)' }}
+                            />
+                            <select 
+                                id="cv-item" 
+                                name="item" 
+                                value={form.item} 
+                                onChange={handleChange} 
+                                size={Math.min(5, Math.max(2, foundItems.filter(i => 
+                                    i.item_name.toLowerCase().includes(itemSearch.toLowerCase()) || 
+                                    i.location.toLowerCase().includes(itemSearch.toLowerCase())
+                                ).length + 1))} 
+                                style={{ height: 'auto', padding: '8px', borderRadius: '8px' }}
+                            >
+                                <option value="" disabled>Click an item to select...</option>
+                                {foundItems.filter(i => 
+                                    i.item_name.toLowerCase().includes(itemSearch.toLowerCase()) || 
+                                    i.location.toLowerCase().includes(itemSearch.toLowerCase())
+                                ).map(item => (
+                                    <option key={item.id} value={item.id} style={{ padding: '8px', cursor: 'pointer' }}>
+                                        {item.item_name} ({item.location})
+                                    </option>
                                 ))}
                             </select>
                         </div>
