@@ -57,6 +57,9 @@ function Profile() {
         setFeedback('');
     };
 
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [showPwd, setShowPwd] = useState(false);
+
     const handleSave = async (e) => {
         e.preventDefault();
         if (!form.full_name || !form.email) {
@@ -64,12 +67,15 @@ function Profile() {
             return;
         }
         try {
+            setIsProcessing(true);
             const updated = await updateProfile(form);
             setProfile(updated);
             setIsEditing(false);
             showFeedback('Profile updated successfully!');
         } catch (err) {
             showFeedback('Failed to update profile.', 0);
+        } finally {
+            setIsProcessing(false);
         }
     };
 
@@ -79,7 +85,12 @@ function Profile() {
             showFeedback('New passwords do not match.', 0);
             return;
         }
+
+        const confirm = window.confirm('Are you sure you want to change your password? You will need to use the new password for your next login.');
+        if (!confirm) return;
+
         try {
+            setIsProcessing(true);
             await changePassword(pwdForm);
             setIsChangingPassword(false);
             setPwdForm({ current_password: '', new_password: '', confirm_password: '' });
@@ -92,6 +103,8 @@ function Profile() {
                 else if (errObj.new_password) msg = errObj.new_password[0];
             } catch(e) {}
             showFeedback(msg, 0);
+        } finally {
+            setIsProcessing(false);
         }
     };
 
@@ -142,56 +155,73 @@ function Profile() {
                         <div className="form-row">
                             <div className="form-group">
                                 <label>Full Name *</label>
-                                <input type="text" name="full_name" value={form.full_name} onChange={handleChange} required />
+                                <input type="text" name="full_name" value={form.full_name} onChange={handleChange} required disabled={isProcessing} />
                             </div>
                             <div className="form-group">
                                 <label>Email Address *</label>
-                                <input type="email" name="email" value={form.email} onChange={handleChange} required />
+                                <input type="email" name="email" value={form.email} onChange={handleChange} required disabled={isProcessing} />
                             </div>
                         </div>
                         <div className="form-group">
                             <label>Department</label>
-                            <input type="text" name="department" value={form.department} onChange={handleChange} />
+                            <input type="text" name="department" value={form.department} onChange={handleChange} disabled={isProcessing} />
                         </div>
                         <div className="form-actions" style={{ marginTop: '1.5rem' }}>
-                            <button type="submit" className="btn-primary">Save Changes</button>
-                            <button type="button" className="btn-secondary" onClick={handleCancel}>Cancel</button>
+                            <button type="submit" className="btn-primary" disabled={isProcessing}>
+                                {isProcessing ? 'Saving...' : 'Save Changes'}
+                            </button>
+                            <button type="button" className="btn-secondary" onClick={handleCancel} disabled={isProcessing}>Cancel</button>
                         </div>
                     </form>
                 ) : (
                     <form onSubmit={handlePasswordChange} className="page-form">
-                        <h2>Change Password</h2>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <h2>Change Password</h2>
+                            <button 
+                                type="button" 
+                                className="btn-text" 
+                                onClick={() => setShowPwd(!showPwd)}
+                                style={{ fontSize: '0.85rem', color: 'var(--primary-color)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '600' }}
+                            >
+                                {showPwd ? '👁️ Hide Passwords' : '👁️ Show Passwords'}
+                            </button>
+                        </div>
                         <div className="form-group">
                             <label>Current Password</label>
                             <input 
-                                type="password" 
+                                type={showPwd ? "text" : "password"}
                                 value={pwdForm.current_password} 
                                 onChange={(e) => setPwdForm({...pwdForm, current_password: e.target.value})} 
                                 required 
+                                disabled={isProcessing}
                             />
                         </div>
                         <div className="form-group">
                             <label>New Password</label>
                             <input 
-                                type="password" 
+                                type={showPwd ? "text" : "password"}
                                 value={pwdForm.new_password} 
                                 onChange={(e) => setPwdForm({...pwdForm, new_password: e.target.value})} 
                                 required 
                                 minLength={6}
+                                disabled={isProcessing}
                             />
                         </div>
                         <div className="form-group">
                             <label>Retype New Password</label>
                             <input 
-                                type="password" 
+                                type={showPwd ? "text" : "password"}
                                 value={pwdForm.confirm_password} 
                                 onChange={(e) => setPwdForm({...pwdForm, confirm_password: e.target.value})} 
                                 required 
+                                disabled={isProcessing}
                             />
                         </div>
                         <div className="form-actions" style={{ marginTop: '1.5rem' }}>
-                            <button type="submit" className="btn-primary">Update Password</button>
-                            <button type="button" className="btn-secondary" onClick={() => setIsChangingPassword(false)}>Cancel</button>
+                            <button type="submit" className="btn-primary" disabled={isProcessing}>
+                                {isProcessing ? 'Updating...' : 'Update Password'}
+                            </button>
+                            <button type="button" className="btn-secondary" onClick={() => setIsChangingPassword(false)} disabled={isProcessing}>Cancel</button>
                         </div>
                     </form>
                 )}
