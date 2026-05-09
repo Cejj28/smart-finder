@@ -219,6 +219,34 @@ export const deleteUser = async (id) => {
     return true;
 };
 
+// ─── DJANGO: Notifications ────────────────────────────────────────────────────
+
+export const fetchNotifications = async () => {
+    const response = await fetch(`${API_URL}/notifications/`, {
+        headers: getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch notifications');
+    return await response.json();
+};
+
+export const markNotificationRead = async (id) => {
+    const response = await fetch(`${API_URL}/notifications/${id}/mark_read/`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to mark notification as read');
+    return await response.json();
+};
+
+export const markAllNotificationsRead = async () => {
+    const response = await fetch(`${API_URL}/notifications/mark_all_read/`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to mark all as read');
+    return await response.json();
+};
+
 // ─── FASTAPI: Analytics ───────────────────────────────────────────────────────
 // All analytics calls use the same Django token (FastAPI verifies it against
 // the shared authtoken_token table).

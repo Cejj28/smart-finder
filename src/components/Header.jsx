@@ -1,17 +1,58 @@
-import { useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import '../styles/Header.css';
 import logo from '../assets/logo.png';
 import useClickOutside from '../hooks/useClickOutside';
 import ConfirmModal from './ConfirmModal';
-import { notifications } from '../data/mockData';
+import { fetchNotifications, markNotificationRead, markAllNotificationsRead } from '../services/api';
 
 function Header({ onToggleSidebar, onLogout }) {
+    const navigate = useNavigate();
     const [profileOpen, setProfileOpen] = useState(false);
     const [notifOpen, setNotifOpen] = useState(false);
+    const [notifications, setNotifications] = useState([]);
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
     const profileRef = useRef(null);
     const notifRef = useRef(null);
+
+    const loadNotifications = useCallback(async () => {
+        try {
+            const data = await fetchNotifications();
+            setNotifications(data);
+        } catch (err) {
+            console.error('Failed to load notifications:', err);
+        }
+    }, []);
+
+    useEffect(() => {
+        loadNotifications();
+        const interval = setInterval(loadNotifications, 30000); // Poll every 30s
+        return () => clearInterval(interval);
+    }, [loadNotifications]);
+
+    const handleNotifClick = async (notif) => {
+        try {
+            if (!notif.is_read) {
+                await markNotificationRead(notif.id);
+                setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, is_read: true } : n));
+            }
+            setNotifOpen(false);
+            if (notif.target_page) navigate(notif.target_page);
+        } catch (err) {
+            console.error('Action failed:', err);
+        }
+    };
+
+    const handleMarkAllRead = async () => {
+        try {
+            await markAllNotificationsRead();
+            setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+        } catch (err) {
+            console.error('Action failed:', err);
+        }
+    };
+
+    const unreadCount = notifications.filter(n => !n.is_read).length;
 
     useClickOutside(profileRef, () => setProfileOpen(false));
     useClickOutside(notifRef, () => setNotifOpen(false));
@@ -38,18 +79,46 @@ function Header({ onToggleSidebar, onLogout }) {
                             onClick={() => { setNotifOpen(!notifOpen); setProfileOpen(false); }}
                         >
                             🔔
-                            <span className="notif-badge">{notifications.length}</span>
+                            {unreadCount > 0 && <span className="notif-badge">{unreadCount}</span>}
                         </button>
 
                         {notifOpen && (
                             <div className="notif-dropdown">
-                                <div className="dropdown-header">Notifications</div>
-                                {notifications.map((n) => (
-                                    <div key={n.id} className="notif-item">
-                                        <p className="notif-message">{n.message}</p>
-                                        <span className="notif-time">{n.time}</span>
-                                    </div>
-                                ))}
+                                <div className="dropdown-header">
+                                    <span>Notifications</span>
+                                    {unreadCount > 0 && (
+                                        <button className="mark-all-read" onClick={handleMarkAllRead}>
+                                            Mark all read
+                                        </button>
+                                    )}
+                                </div>
+                                <div className="notif-list" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                                    {notifications.length === 0 ? (
+                                        <div className="notif-empty">No notifications</div>
+                                    ) : (
+                                        notifications.map((n) => (
+                                            <div 
+                                                key={n.id} 
+                                                className={`notif-item ${!n.is_read ? 'unread' : ''}`}
+                                                onClick={() => handleNotifClick(n)}
+                                                style={{ cursor: 'pointer' }}
+                                            >
+                                                <div className="notif-content">
+                                                    <h4 className="notif-title" style={{ margin: '0 0 4px 0', fontSize: '0.9rem', fontWeight: n.is_read ? '600' : '800' }}>
+                                                        {n.title}
+                                                    </h4>
+                                                    <p className="notif-message" style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                                                        {n.message}
+                                                    </p>
+                                                    <span className="notif-time" style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>
+                                                        {new Date(n.created_at).toLocaleString()}
+                                                    </span>
+                                                </div>
+                                                {!n.is_read && <span className="unread-dot"></span>}
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
                             </div>
                         )}
                     </div>

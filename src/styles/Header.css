@@ -137,6 +137,25 @@
     font-size: 0.9rem;
     color: #1E293B;
     border-bottom: 1px solid #E2E8F0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.mark-all-read {
+    background: none;
+    border: none;
+    color: #0EA5A4;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.mark-all-read:hover {
+    background: #F1F5F9;
+    text-decoration: underline;
 }
 
 .notif-item {
@@ -144,6 +163,14 @@
     border-bottom: 1px solid #F1F5F9;
     transition: background 0.15s ease;
     cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.notif-item.unread {
+    background: #F0FDFA; /* Very light teal */
 }
 
 .notif-item:last-child {
@@ -166,6 +193,21 @@
     color: #94A3B8;
     margin-top: 0.2rem;
     display: block;
+}
+
+.unread-dot {
+    width: 8px;
+    height: 8px;
+    background: #0EA5A4;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.notif-empty {
+    padding: 2rem 1rem;
+    text-align: center;
+    color: #94A3B8;
+    font-size: 0.85rem;
 }
 
 .profile-wrapper {
