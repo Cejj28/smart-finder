@@ -4,7 +4,7 @@ import ConfirmModal from '../components/ConfirmModal';
 import DetailPanel from '../components/DetailPanel';
 import useConfirmModal from '../hooks/useConfirmModal';
 import useSearch from '../hooks/useSearch';
-import { fetchItems, updateItemStatus, createItem, predictCategory } from '../services/api';
+import { fetchItems, updateItemStatus, createItem, predictCategory, deleteItem } from '../services/api';
 import '../styles/App.css';
 import '../styles/Pages.css';
 
@@ -29,6 +29,12 @@ const CONFIRM_ACTIONS = {
         title: 'Reject Post',
         message: 'Are you sure you want to reject this post? This will hide it from the mobile feed.',
         confirmLabel: 'Reject',
+        variant: 'danger',
+    },
+    delete: {
+        title: 'Delete Post',
+        message: 'Are you sure you want to completely delete this post? This action cannot be undone and will remove it from all feeds permanently.',
+        confirmLabel: 'Delete',
         variant: 'danger',
     },
 };
@@ -152,6 +158,11 @@ function ItemManagement() {
                 setPosts(prev => [newPost, ...prev]);
                 resetForm();
                 setFeedback('Post submitted successfully!');
+                setTimeout(() => setFeedback(''), 3000);
+            } else if (action === 'delete') {
+                await deleteItem(id);
+                setPosts(prev => prev.filter(p => p.id !== id));
+                setFeedback('Post deleted permanently.');
                 setTimeout(() => setFeedback(''), 3000);
             } else {
                 const newStatus = action === 'approve' ? 'Approved' : 'Rejected';
@@ -687,16 +698,21 @@ function ItemManagement() {
                     return true;
                 })}
                 actions={
-                    selectedPost?.status === 'Pending Review' ? (
-                        <>
-                            <button className="btn-danger" onClick={() => openConfirm(selectedPost.id, 'reject')}>Reject</button>
-                            <button className="btn-primary" onClick={() => openConfirm(selectedPost.id, 'approve')}>Approve</button>
-                        </>
-                    ) : (
-                        <div style={{ padding: '10px', textAlign: 'center', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
-                            Post is already {selectedPost?.status.toLowerCase()}.
-                        </div>
-                    )
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
+                        {selectedPost?.status === 'Pending Review' ? (
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                                <button className="btn-danger" style={{ flex: 1 }} onClick={() => openConfirm(selectedPost.id, 'reject')}>Reject</button>
+                                <button className="btn-primary" style={{ flex: 1 }} onClick={() => openConfirm(selectedPost.id, 'approve')}>Approve</button>
+                            </div>
+                        ) : (
+                            <div style={{ padding: '10px', textAlign: 'center', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                                Post is already {selectedPost?.status.toLowerCase()}.
+                            </div>
+                        )}
+                        <button className="btn-danger" style={{ background: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', width: '100%' }} onClick={() => openConfirm(selectedPost.id, 'delete')}>
+                            Delete Post Permanently
+                        </button>
+                    </div>
                 }
             />
         </main>

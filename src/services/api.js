@@ -106,6 +106,15 @@ export const fetchMatches = async (id) => {
     return await response.json();
 };
 
+export const deleteItem = async (id) => {
+    const response = await fetch(`${API_URL}/items/${id}/`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to delete item');
+    return true;
+};
+
 // ─── DJANGO: Claims ───────────────────────────────────────────────────────────
 
 export const fetchClaims = async () => {
