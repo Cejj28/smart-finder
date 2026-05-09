@@ -107,10 +107,10 @@ function Header({ onToggleSidebar, onLogout }) {
                                                     <h4 className="notif-title" style={{ margin: '0 0 4px 0', fontSize: '0.9rem', fontWeight: n.is_read ? '600' : '800' }}>
                                                         {n.title}
                                                     </h4>
-                                                    <p className="notif-message" style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                                                    <p className="notif-message">
                                                         {n.message}
                                                     </p>
-                                                    <span className="notif-time" style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>
+                                                    <span className="notif-time">
                                                         {new Date(n.created_at).toLocaleString()}
                                                     </span>
                                                 </div>
