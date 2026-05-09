@@ -181,10 +181,15 @@
     background: #F1F5F9;
 }
 
+.notif-title {
+    color: #1E293B; /* Dark slate */
+    margin: 0 0 4px 0;
+}
+
 .notif-message {
     margin: 0;
     font-size: 0.85rem;
-    color: #1E293B;
+    color: #475569; /* Slate gray */
     font-weight: 500;
 }
 
