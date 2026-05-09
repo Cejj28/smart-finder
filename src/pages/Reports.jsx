@@ -42,13 +42,51 @@ function Reports() {
         setGenerated(false);
     }, []);
 
+    const downloadCSV = useCallback(() => {
+        if (filteredReports.length === 0) return;
+        
+        const headers = ['ID', 'Type', 'Item Name', 'Location', 'Reporter', 'Date', 'Status', 'Description'];
+        const rows = filteredReports.map(r => [
+            r.id,
+            r.type,
+            `"${r.item_name.replace(/"/g, '""')}"`,
+            `"${r.location.replace(/"/g, '""')}"`,
+            r.reporter,
+            r.date,
+            r.status,
+            `"${(r.description || '').replace(/"/g, '""')}"`
+        ]);
+
+        const csvContent = "data:text/csv;charset=utf-8," 
+            + headers.join(",") + "\n"
+            + rows.map(e => e.join(",")).join("\n");
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `smartfinder_report_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }, [filteredReports]);
+
     // Memoize filtered reports so they only recompute when reports or filters change
     const filteredReports = useMemo(() =>
         reports.filter(r => {
             if (filters.type !== 'All' && r.type !== filters.type) return false;
             if (filters.status !== 'All' && r.status !== filters.status) return false;
-            if (filters.dateFrom && r.date < filters.dateFrom) return false;
-            if (filters.dateTo && r.date > filters.dateTo) return false;
+            
+            // Date filtering using ISO strings for accurate comparison
+            if (filters.dateFrom) {
+                const from = new Date(filters.dateFrom).getTime();
+                const current = new Date(r.rawDate).getTime();
+                if (current < from) return false;
+            }
+            if (filters.dateTo) {
+                const to = new Date(filters.dateTo).setHours(23, 59, 59, 999);
+                const current = new Date(r.rawDate).getTime();
+                if (current > to) return false;
+            }
             return true;
         }),
         [reports, filters]);
@@ -60,7 +98,7 @@ function Reports() {
         found: filteredReports.filter(r => r.type === 'Found').length,
         pending: filteredReports.filter(r => r.status === 'Pending Review').length,
         approved: filteredReports.filter(r => r.status === 'Approved').length,
-        claimed: filteredReports.filter(r => r.status === 'Claimed').length,
+        released: filteredReports.filter(r => r.status === 'Released').length,
     }), [filteredReports]);
 
     const detailFields = [
@@ -107,7 +145,7 @@ function Reports() {
                                 <option value="Pending Review">Pending Review</option>
                                 <option value="Approved">Approved</option>
                                 <option value="Rejected">Rejected</option>
-                                <option value="Claimed">Claimed</option>
+                                <option value="Released">Released (Claimed)</option>
                             </select>
                         </div>
                     </div>
@@ -154,13 +192,18 @@ function Reports() {
                             <span className="mini-stat-label">Approved</span>
                         </div>
                         <div className="mini-stat">
-                            <span className="mini-stat-count">{summary.claimed}</span>
-                            <span className="mini-stat-label">Claimed</span>
+                            <span className="mini-stat-count">{summary.released}</span>
+                            <span className="mini-stat-label">Released</span>
                         </div>
                     </div>
 
                     <section className="table-card">
-                        <h2>Report Results ({filteredReports.length} records)</h2>
+                        <div className="search-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <h2>Report Results ({filteredReports.length} records)</h2>
+                            <button className="btn-primary" onClick={downloadCSV} style={{ padding: '8px 16px', fontSize: '14px' }}>
+                                📥 Export to CSV
+                            </button>
+                        </div>
                         <div className="table-wrapper">
                             <table>
                                 <thead>

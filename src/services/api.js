@@ -56,6 +56,7 @@ export const fetchItems = async () => {
         submittedBy: item.reporter_username || 'Admin',
         reporter: item.reporter_username || 'Admin',
         date: new Date(item.created_at).toLocaleDateString(),
+        rawDate: item.created_at, // Keep raw ISO date for filtering
         description: item.description,
         contact_info: item.contact_info,
         category: item.category,
