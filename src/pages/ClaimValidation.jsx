@@ -52,8 +52,8 @@ function ClaimValidation() {
             const claimsData = await fetchClaims();
             setClaims(claimsData);
             const itemsData = await fetchItems();
-            // Only keep "Found" items for the dropdown
-            setFoundItems(itemsData.filter(i => i.type === 'Found'));
+            // Only keep "Found" items that are "Approved" (not released) for the dropdown
+            setFoundItems(itemsData.filter(i => i.type === 'Found' && i.status === 'Approved'));
         } catch (err) {
             console.error('Failed to load claims', err);
         }
