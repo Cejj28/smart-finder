@@ -5,7 +5,7 @@ import ConfirmModal from '../components/ConfirmModal';
 import DetailPanel from '../components/DetailPanel';
 import useConfirmModal from '../hooks/useConfirmModal';
 import useSearch from '../hooks/useSearch';
-import { fetchItems, updateItemStatus } from '../services/api';
+import { fetchItems, updateItemStatus, deleteItem } from '../services/api';
 import '../styles/App.css';
 import '../styles/Pages.css';
 
@@ -22,6 +22,12 @@ const CONFIRM_ACTIONS = {
         title: 'Reject Post',
         message: 'Are you sure you want to reject this post? This action cannot be undone.',
         confirmLabel: 'Reject',
+        variant: 'danger',
+    },
+    delete: {
+        title: 'Delete Post',
+        message: 'Are you sure you want to completely delete this post? This action cannot be undone and will remove it everywhere permanently.',
+        confirmLabel: 'Delete',
         variant: 'danger',
     },
 };
@@ -69,6 +75,9 @@ function Dashboard() {
                 setItems(prev => prev.map(item =>
                     item.id === id ? { ...item, status: 'Rejected' } : item
                 ));
+            } else if (action === 'delete') {
+                await deleteItem(id);
+                setItems(prev => prev.filter(item => item.id !== id));
             }
         } catch (err) {
             console.error('Update status failed', err);
@@ -169,12 +178,17 @@ function Dashboard() {
                 data={selectedItem || {}}
                 fields={detailFields}
                 actions={
-                    selectedItem?.status === 'Pending Review' ? (
-                        <>
-                            <button className="btn-danger" onClick={() => openConfirm(selectedItem.id, 'reject')}>Reject</button>
-                            <button className="btn-primary" onClick={() => openConfirm(selectedItem.id, 'approve')}>Approve</button>
-                        </>
-                    ) : null
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
+                        {selectedItem?.status === 'Pending Review' && (
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                                <button className="btn-danger" style={{ flex: 1 }} onClick={() => openConfirm(selectedItem.id, 'reject')}>Reject</button>
+                                <button className="btn-primary" style={{ flex: 1 }} onClick={() => openConfirm(selectedItem.id, 'approve')}>Approve</button>
+                            </div>
+                        )}
+                        <button className="btn-danger" style={{ background: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', width: '100%' }} onClick={() => openConfirm(selectedItem.id, 'delete')}>
+                            Delete Post Permanently
+                        </button>
+                    </div>
                 }
             />
         </main>
