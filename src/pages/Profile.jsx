@@ -1,7 +1,24 @@
 import { useState, useEffect, useCallback } from 'react';
 import useFormHandler from '../hooks/useFormHandler';
 import { fetchProfile, updateProfile, changePassword } from '../services/api';
+import ConfirmModal from '../components/ConfirmModal';
+import useConfirmModal from '../hooks/useConfirmModal';
 import '../styles/Pages.css';
+
+const CONFIRM_ACTIONS = {
+    changePassword: {
+        title: 'Change Password',
+        message: 'Are you sure you want to change your password? You will need to use the new password for your next login.',
+        confirmLabel: 'Update Password',
+        variant: 'primary',
+    },
+    saveProfile: {
+        title: 'Save Profile Changes',
+        message: 'Are you sure you want to save these changes to your profile details?',
+        confirmLabel: 'Save Changes',
+        variant: 'primary',
+    }
+};
 
 function Profile() {
     const [profile, setProfile] = useState(null);
@@ -9,6 +26,8 @@ function Profile() {
     const [isChangingPassword, setIsChangingPassword] = useState(false);
     const [loading, setLoading] = useState(true);
     
+    const { confirm, openConfirm, closeConfirm, confirmProps } = useConfirmModal(CONFIRM_ACTIONS);
+
     const { form, setForm, feedback, handleChange, showFeedback, setFeedback } = useFormHandler({
         full_name: '',
         email: '',
@@ -60,18 +79,14 @@ function Profile() {
     const [isProcessing, setIsProcessing] = useState(false);
     const [showPwd, setShowPwd] = useState(false);
 
-    const handleSave = async (e) => {
-        e.preventDefault();
-        if (!form.full_name || !form.email) {
-            showFeedback('Name and email are required.', 0);
-            return;
-        }
+    const handleSaveSubmit = async () => {
         try {
             setIsProcessing(true);
             const updated = await updateProfile(form);
             setProfile(updated);
             setIsEditing(false);
             showFeedback('Profile updated successfully!');
+            closeConfirm();
         } catch (err) {
             showFeedback('Failed to update profile.', 0);
         } finally {
@@ -79,22 +94,14 @@ function Profile() {
         }
     };
 
-    const handlePasswordChange = async (e) => {
-        e.preventDefault();
-        if (pwdForm.new_password !== pwdForm.confirm_password) {
-            showFeedback('New passwords do not match.', 0);
-            return;
-        }
-
-        const confirm = window.confirm('Are you sure you want to change your password? You will need to use the new password for your next login.');
-        if (!confirm) return;
-
+    const handlePasswordSubmit = async () => {
         try {
             setIsProcessing(true);
             await changePassword(pwdForm);
             setIsChangingPassword(false);
             setPwdForm({ current_password: '', new_password: '', confirm_password: '' });
             showFeedback('Password updated successfully!');
+            closeConfirm();
         } catch (err) {
             let msg = 'Failed to update password.';
             try {
@@ -106,6 +113,24 @@ function Profile() {
         } finally {
             setIsProcessing(false);
         }
+    };
+
+    const handleSaveClick = (e) => {
+        e.preventDefault();
+        if (!form.full_name || !form.email) {
+            showFeedback('Name and email are required.', 0);
+            return;
+        }
+        openConfirm(null, 'saveProfile');
+    };
+
+    const handlePasswordClick = (e) => {
+        e.preventDefault();
+        if (pwdForm.new_password !== pwdForm.confirm_password) {
+            showFeedback('New passwords do not match.', 0);
+            return;
+        }
+        openConfirm(null, 'changePassword');
     };
 
     if (loading) return <div className="page-container"><p>Loading profile...</p></div>;
@@ -150,7 +175,7 @@ function Profile() {
                         </div>
                     </div>
                 ) : isEditing ? (
-                    <form onSubmit={handleSave} className="page-form">
+                    <form onSubmit={handleSaveClick} className="page-form">
                         <h2>Edit Profile</h2>
                         <div className="form-row">
                             <div className="form-group">
@@ -174,7 +199,7 @@ function Profile() {
                         </div>
                     </form>
                 ) : (
-                    <form onSubmit={handlePasswordChange} className="page-form">
+                    <form onSubmit={handlePasswordClick} className="page-form">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <h2>Change Password</h2>
                             <button 
@@ -226,6 +251,13 @@ function Profile() {
                     </form>
                 )}
             </section>
+
+            <ConfirmModal
+                isOpen={confirm.open}
+                {...confirmProps}
+                onConfirm={confirm.action === 'saveProfile' ? handleSaveSubmit : handlePasswordSubmit}
+                onCancel={closeConfirm}
+            />
         </main>
     );
 }
