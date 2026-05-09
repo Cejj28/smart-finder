@@ -158,36 +158,67 @@ function ClaimValidation() {
                             <label htmlFor="cv-claimant">Claimant Name *</label>
                             <input id="cv-claimant" type="text" name="claimant" value={form.claimant} onChange={handleChange} placeholder="Full name" />
                         </div>
-                        <div className="form-group">
-                            <label htmlFor="cv-item">Search & Select Found Item *</label>
+                        <div className="form-group" style={{ position: 'relative' }}>
+                            <label>Search & Select Found Item *</label>
                             <input 
                                 type="text" 
-                                placeholder="Search by item name or location..." 
+                                placeholder="🔍 Search by item name or location..." 
                                 value={itemSearch}
                                 onChange={(e) => setItemSearch(e.target.value)}
-                                style={{ marginBottom: '8px', padding: '10px', borderRadius: '8px', border: '1px solid var(--border)' }}
+                                style={{ width: '100%', marginBottom: '8px', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', fontSize: '14px', outline: 'none' }}
                             />
-                            <select 
-                                id="cv-item" 
-                                name="item" 
-                                value={form.item} 
-                                onChange={handleChange} 
-                                size={Math.min(5, Math.max(2, foundItems.filter(i => 
-                                    i.item_name.toLowerCase().includes(itemSearch.toLowerCase()) || 
-                                    i.location.toLowerCase().includes(itemSearch.toLowerCase())
-                                ).length + 1))} 
-                                style={{ height: 'auto', padding: '8px', borderRadius: '8px' }}
-                            >
-                                <option value="" disabled>Click an item to select...</option>
+                            
+                            <div className="custom-select-dropdown" style={{ 
+                                maxHeight: '220px', 
+                                overflowY: 'auto', 
+                                border: '1px solid var(--border)', 
+                                borderRadius: '8px',
+                                backgroundColor: 'var(--surface)',
+                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)'
+                            }}>
                                 {foundItems.filter(i => 
                                     i.item_name.toLowerCase().includes(itemSearch.toLowerCase()) || 
                                     i.location.toLowerCase().includes(itemSearch.toLowerCase())
-                                ).map(item => (
-                                    <option key={item.id} value={item.id} style={{ padding: '8px', cursor: 'pointer' }}>
-                                        {item.item_name} ({item.location})
-                                    </option>
-                                ))}
-                            </select>
+                                ).map(item => {
+                                    const isSelected = form.item === item.id;
+                                    return (
+                                        <div 
+                                            key={item.id} 
+                                            onClick={() => handleChange({ target: { name: 'item', value: item.id } })}
+                                            style={{ 
+                                                padding: '12px 16px', 
+                                                cursor: 'pointer',
+                                                borderBottom: '1px solid var(--border)',
+                                                backgroundColor: isSelected ? 'var(--primary-light)' : 'transparent',
+                                                color: isSelected ? 'var(--primary)' : 'var(--text-dark)',
+                                                fontWeight: isSelected ? '600' : '400',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                gap: '4px',
+                                                transition: 'background-color 0.2s ease'
+                                            }}
+                                            onMouseEnter={(e) => { if(!isSelected) e.currentTarget.style.backgroundColor = 'var(--bg-hover)'; }}
+                                            onMouseLeave={(e) => { if(!isSelected) e.currentTarget.style.backgroundColor = 'transparent'; }}
+                                        >
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <span>{item.item_name}</span>
+                                                {isSelected && <span style={{ fontSize: '14px' }}>✅</span>}
+                                            </div>
+                                            <span style={{ fontSize: '12px', color: isSelected ? 'var(--primary)' : 'var(--text-light)', opacity: 0.8 }}>
+                                                📍 {item.location}
+                                            </span>
+                                        </div>
+                                    );
+                                })}
+                                {foundItems.filter(i => 
+                                    i.item_name.toLowerCase().includes(itemSearch.toLowerCase()) || 
+                                    i.location.toLowerCase().includes(itemSearch.toLowerCase())
+                                ).length === 0 && (
+                                    <div style={{ padding: '24px', color: 'var(--text-light)', textAlign: 'center', fontSize: '14px' }}>
+                                        No items matching "{itemSearch}"
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                     <div className="form-row">
