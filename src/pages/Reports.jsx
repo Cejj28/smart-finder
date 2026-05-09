@@ -23,8 +23,39 @@ function Reports() {
         dateFrom: '',
         dateTo: '',
     });
-    const [generated, setGenerated] = useState(false);
     const [selectedReport, setSelectedReport] = useState(null);
+    const [generated, setGenerated] = useState(false);
+
+    // Memoize filtered reports so they only recompute when reports or filters change
+    const filteredReports = useMemo(() =>
+        reports.filter(r => {
+            if (filters.type !== 'All' && r.type !== filters.type) return false;
+            if (filters.status !== 'All' && r.status !== filters.status) return false;
+            
+            // Date filtering using ISO strings for accurate comparison
+            if (filters.dateFrom) {
+                const from = new Date(filters.dateFrom).getTime();
+                const current = new Date(r.rawDate).getTime();
+                if (current < from) return false;
+            }
+            if (filters.dateTo) {
+                const to = new Date(filters.dateTo).setHours(23, 59, 59, 999);
+                const current = new Date(r.rawDate).getTime();
+                if (current > to) return false;
+            }
+            return true;
+        }),
+        [reports, filters]);
+
+    // Memoize summary stats so they only recompute when filteredReports changes
+    const summary = useMemo(() => ({
+        total: filteredReports.length,
+        lost: filteredReports.filter(r => r.type === 'Lost').length,
+        found: filteredReports.filter(r => r.type === 'Found').length,
+        pending: filteredReports.filter(r => r.status === 'Pending Review').length,
+        approved: filteredReports.filter(r => r.status === 'Approved').length,
+        released: filteredReports.filter(r => r.status === 'Released').length,
+    }), [filteredReports]);
 
     const handleFilterChange = useCallback((e) => {
         const { name, value } = e.target;
@@ -69,37 +100,6 @@ function Reports() {
         link.click();
         document.body.removeChild(link);
     }, [filteredReports]);
-
-    // Memoize filtered reports so they only recompute when reports or filters change
-    const filteredReports = useMemo(() =>
-        reports.filter(r => {
-            if (filters.type !== 'All' && r.type !== filters.type) return false;
-            if (filters.status !== 'All' && r.status !== filters.status) return false;
-            
-            // Date filtering using ISO strings for accurate comparison
-            if (filters.dateFrom) {
-                const from = new Date(filters.dateFrom).getTime();
-                const current = new Date(r.rawDate).getTime();
-                if (current < from) return false;
-            }
-            if (filters.dateTo) {
-                const to = new Date(filters.dateTo).setHours(23, 59, 59, 999);
-                const current = new Date(r.rawDate).getTime();
-                if (current > to) return false;
-            }
-            return true;
-        }),
-        [reports, filters]);
-
-    // Memoize summary stats so they only recompute when filteredReports changes
-    const summary = useMemo(() => ({
-        total: filteredReports.length,
-        lost: filteredReports.filter(r => r.type === 'Lost').length,
-        found: filteredReports.filter(r => r.type === 'Found').length,
-        pending: filteredReports.filter(r => r.status === 'Pending Review').length,
-        approved: filteredReports.filter(r => r.status === 'Approved').length,
-        released: filteredReports.filter(r => r.status === 'Released').length,
-    }), [filteredReports]);
 
     const detailFields = [
         { label: 'Type', key: 'type', render: (val) => <StatusBadge status={val} /> },
